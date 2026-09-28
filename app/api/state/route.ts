@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { seedGoals } from "../../../lib/goals";
+import { visibleCheckinSQL,viewerBindings,feedAudienceSQL,audienceBindings } from "../../../lib/social-access";
 
 export const dynamic = "force-dynamic";
 
@@ -29,27 +30,23 @@ export async function GET(request:Request){
   const start=/^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("start")||"")?url.searchParams.get("start")!:new Date().toISOString().slice(0,10);
   let end=/^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("end")||"")?url.searchParams.get("end")!:start;
   if(Date.parse(end)-Date.parse(start)>45*86400000)end=new Date(Date.parse(start)+45*86400000).toISOString().slice(0,10);
-  const [person,roster,memberships,goals,choices,entries,feed]=await Promise.all([
-   db.prepare("SELECT id,email,name,weekday_wake AS weekdayWake,weekend_wake AS weekendWake,weekday_bed AS weekdayBed,reminder_time AS reminderTime,reminders FROM people WHERE id=?").bind(user.userId).first(),
-   db.prepare("SELECT DISTINCT p.id,p.name,p.email,p.weekday_wake AS weekdayWake,p.weekend_wake AS weekendWake,p.weekday_bed AS weekdayBed FROM members m JOIN people p ON p.id=m.person_id WHERE m.circle_id IN (SELECT circle_id FROM members WHERE person_id=?) ORDER BY p.name").bind(user.userId).all(),
+  const [person,roster,memberships,goals,choices,entries,feed,privacy,publicGoals]=await Promise.all([
+   db.prepare("SELECT id,email,name,weekday_wake AS weekdayWake,weekend_wake AS weekendWake,weekday_bed AS weekdayBed,reminder_time AS reminderTime,reminders,avatar_key AS avatarKey FROM people WHERE id=?").bind(user.userId).first(),
+   db.prepare("SELECT DISTINCT p.id,p.name,p.weekday_wake AS weekdayWake,p.weekend_wake AS weekendWake,p.weekday_bed AS weekdayBed,p.avatar_key AS avatarKey FROM people p WHERE p.id=? OR EXISTS (SELECT 1 FROM members m JOIN members viewer ON viewer.circle_id=m.circle_id WHERE m.person_id=p.id AND viewer.person_id=?) OR EXISTS (SELECT 1 FROM friendships f WHERE f.status='accepted' AND ((f.requester_id=? AND f.recipient_id=p.id) OR (f.recipient_id=? AND f.requester_id=p.id))) ORDER BY p.name").bind(user.userId,user.userId,user.userId,user.userId).all(),
    db.prepare("SELECT m.circle_id AS circleId,m.person_id AS personId FROM members m WHERE m.circle_id IN (SELECT circle_id FROM members WHERE person_id=?)").bind(user.userId).all(),
    db.prepare("SELECT g.id,g.circle_id AS circleId,g.kind,g.slot,g.title,g.cadence,g.target,g.active FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE m.person_id=? ORDER BY g.created_at,g.rowid").bind(user.userId).all(),
    db.prepare("SELECT ch.goal_id AS goalId,ch.person_id AS personId,ch.enabled FROM goal_choices ch JOIN group_goals g ON g.id=ch.goal_id WHERE g.circle_id IN (SELECT circle_id FROM members WHERE person_id=?)").bind(user.userId).all(),
-   db.prepare(`SELECT DISTINCT x.id,x.person_id AS personId,x.date,x.kind,x.slot,x.value,x.logged_time AS loggedTime,x.details,x.photo_key AS photoKey,x.created_at AS createdAt,x.updated_at AS updatedAt
-     FROM checkins x JOIN group_goals g ON g.kind=x.kind AND g.slot=x.slot AND g.active=1
-     JOIN members actor ON actor.circle_id=g.circle_id AND actor.person_id=x.person_id
-     JOIN members viewer ON viewer.circle_id=g.circle_id AND viewer.person_id=?
-     LEFT JOIN goal_choices choice ON choice.goal_id=g.id AND choice.person_id=x.person_id
-     WHERE x.date BETWEEN ? AND ? AND COALESCE(choice.enabled,1)=1
-     ORDER BY x.updated_at DESC`).bind(user.userId,start,end).all(),
-   db.prepare(`SELECT DISTINCT x.id,x.person_id AS personId,x.date,x.kind,x.slot,x.value,x.logged_time AS loggedTime,x.details,x.photo_key AS photoKey,x.created_at AS createdAt,x.updated_at AS updatedAt
-     FROM checkins x JOIN group_goals g ON g.kind=x.kind AND g.slot=x.slot AND g.active=1
-     JOIN members actor ON actor.circle_id=g.circle_id AND actor.person_id=x.person_id
-     JOIN members viewer ON viewer.circle_id=g.circle_id AND viewer.person_id=?
-     LEFT JOIN goal_choices choice ON choice.goal_id=g.id AND choice.person_id=x.person_id
-     WHERE COALESCE(choice.enabled,1)=1
-     ORDER BY x.updated_at DESC,x.id DESC LIMIT 100`).bind(user.userId).all(),
+   db.prepare(`SELECT x.id,x.person_id AS personId,x.date,x.kind,x.slot,x.value,x.logged_time AS loggedTime,x.details,x.photo_key AS photoKey,x.created_at AS createdAt,x.updated_at AS updatedAt
+    FROM checkins x WHERE x.date BETWEEN ? AND ? AND ${visibleCheckinSQL} AND ${feedAudienceSQL} ORDER BY x.updated_at DESC`).bind(start,end,...viewerBindings(user.userId),...audienceBindings(user.userId)).all(),
+   db.prepare(`SELECT x.id,x.person_id AS personId,x.date,x.kind,x.slot,x.value,x.logged_time AS loggedTime,x.details,x.photo_key AS photoKey,x.created_at AS createdAt,x.updated_at AS updatedAt
+    FROM checkins x WHERE ${visibleCheckinSQL} AND ${feedAudienceSQL} ORDER BY x.updated_at DESC,x.id DESC LIMIT 100`).bind(...viewerBindings(user.userId),...audienceBindings(user.userId)).all(),
+   db.prepare("SELECT person_id AS personId,kind,slot,visibility FROM habit_visibility WHERE person_id=? OR person_id IN (SELECT m.person_id FROM members m JOIN members mine ON mine.circle_id=m.circle_id WHERE mine.person_id=?)").bind(user.userId,user.userId).all(),
+   db.prepare(`SELECT DISTINCT g.kind,g.slot,g.title,g.cadence,g.target,p.id AS personId FROM group_goals g
+    JOIN members m ON m.circle_id=g.circle_id JOIN people p ON p.id=m.person_id
+    LEFT JOIN goal_choices choice ON choice.goal_id=g.id AND choice.person_id=p.id
+    JOIN habit_visibility privacy ON privacy.person_id=p.id AND privacy.kind=g.kind AND privacy.slot=g.slot AND privacy.visibility='public'
+    WHERE g.active=1 AND COALESCE(choice.enabled,1)=1 AND EXISTS (SELECT 1 FROM friendships f WHERE f.status='accepted' AND ((f.requester_id=? AND f.recipient_id=p.id) OR (f.recipient_id=? AND f.requester_id=p.id)))`).bind(user.userId,user.userId).all(),
   ]);
-  return Response.json({me:person,circle,groups,people:roster.results,memberships:memberships.results,goals:goals.results,choices:choices.results,checkins:entries.results,feed:feed.results});
+  return Response.json({me:person,circle,groups,people:roster.results,memberships:memberships.results,goals:goals.results,choices:choices.results,checkins:entries.results,feed:feed.results,privacy:privacy.results,publicGoals:publicGoals.results});
  }catch(error){console.error("state load failed",error);return Response.json({error:"Could not load your calendar. Please try again."},{status:500})}
 }

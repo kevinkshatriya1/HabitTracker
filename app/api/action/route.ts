@@ -76,6 +76,14 @@ export async function POST(request:Request) {
       await db.prepare("INSERT INTO goal_choices (goal_id,person_id,enabled) SELECT ?,person_id,CASE WHEN person_id=? THEN 1 ELSE 0 END FROM members WHERE circle_id=?").bind(id,user.userId,circleId).run();
       return Response.json({ok:true});
     }
+    if (data.action==="privacy") {
+      const kind=String(data.kind||""),slot=Number(data.slot),visibility=String(data.visibility||"");
+      if(!["private","group","public"].includes(visibility)||!Number.isInteger(slot)||slot<0||slot>1)return Response.json({error:"Choose who can see this habit."},{status:400});
+      const goal=await db.prepare("SELECT g.id FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE m.person_id=? AND g.kind=? AND g.slot=? LIMIT 1").bind(user.userId,kind,slot).first();
+      if(!goal)return Response.json({error:"Habit not found."},{status:404});
+      await db.prepare("INSERT INTO habit_visibility (person_id,kind,slot,visibility) VALUES (?,?,?,?) ON CONFLICT(person_id,kind,slot) DO UPDATE SET visibility=excluded.visibility").bind(user.userId,kind,slot,visibility).run();
+      return Response.json({ok:true});
+    }
     if (data.action==="goal_choice") {
       const goalId=String(data.goalId||"");
       const goal=await db.prepare("SELECT g.id FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE g.id=? AND m.person_id=? AND g.active=1").bind(goalId,user.userId).first();

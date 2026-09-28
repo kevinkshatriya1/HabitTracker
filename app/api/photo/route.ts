@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { notifyFriends } from "../../../lib/push";
+import { visibleCheckinSQL,viewerBindings } from "../../../lib/social-access";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +34,7 @@ export async function GET(request:Request) {
   const id=new URL(request.url).searchParams.get("id");
   if (!id) return new Response(null,{status:400});
   if (!env.DB || !env.BUCKET) return new Response(null,{status:503});
-  const entry=await env.DB.prepare(`SELECT x.photo_key AS photoKey,x.photo_type AS photoType FROM checkins x
-    JOIN members actor ON actor.person_id=x.person_id
-    JOIN members viewer ON viewer.circle_id=actor.circle_id
-    JOIN group_goals g ON g.circle_id=actor.circle_id AND g.kind=x.kind AND g.slot=x.slot AND g.active=1
-    LEFT JOIN goal_choices choice ON choice.goal_id=g.id AND choice.person_id=x.person_id
-    WHERE x.id=? AND viewer.person_id=? AND x.photo_key IS NOT NULL AND COALESCE(choice.enabled,1)=1 LIMIT 1`).bind(id,user.userId).first<{photoKey:string;photoType:string}>();
+  const entry=await env.DB.prepare(`SELECT x.photo_key AS photoKey,x.photo_type AS photoType FROM checkins x WHERE x.id=? AND x.photo_key IS NOT NULL AND ${visibleCheckinSQL} LIMIT 1`).bind(id,...viewerBindings(user.userId)).first<{photoKey:string;photoType:string}>();
   if (!entry) return new Response(null,{status:404});
   const image=await env.BUCKET.get(entry.photoKey);
   if (!image) return new Response(null,{status:404});

@@ -18,16 +18,19 @@ export function trustedPushEndpoint(value:string) {
 export async function notifyFriends(actorId:string, date:string, message:string,kind:string,slot:number) {
   if (!env.DB || !env.VAPID_PRIVATE_JWK) return;
   try {
-    const [actor,subscriptions]=await Promise.all([
+    const [actor,privacy]=await Promise.all([
       env.DB.prepare("SELECT name FROM people WHERE id=?").bind(actorId).first<{name:string}>(),
-      env.DB.prepare(`SELECT DISTINCT s.id,s.endpoint,s.p256dh,s.auth FROM push_subscriptions s
-        JOIN members recipient ON recipient.person_id=s.person_id
-        JOIN members actor ON actor.circle_id=recipient.circle_id
-        JOIN group_goals g ON g.circle_id=actor.circle_id AND g.kind=? AND g.slot=? AND g.active=1
-        LEFT JOIN goal_choices actor_choice ON actor_choice.goal_id=g.id AND actor_choice.person_id=?
-        LEFT JOIN goal_choices friend_choice ON friend_choice.goal_id=g.id AND friend_choice.person_id=s.person_id
-        WHERE actor.person_id=? AND recipient.person_id<>? AND COALESCE(actor_choice.enabled,1)=1 AND COALESCE(friend_choice.enabled,1)=1 LIMIT 100`).bind(kind,slot,actorId,actorId,actorId).all<SubscriptionRow>(),
+      env.DB.prepare("SELECT visibility FROM habit_visibility WHERE person_id=? AND kind=? AND slot=?").bind(actorId,kind,slot).first<{visibility:string}>(),
     ]);
+    if(privacy?.visibility==="private")return;
+    const subscriptions=await env.DB.prepare(`SELECT DISTINCT s.id,s.endpoint,s.p256dh,s.auth FROM push_subscriptions s
+      WHERE s.person_id<>? AND (
+       EXISTS (SELECT 1 FROM members recipient JOIN members actor ON actor.circle_id=recipient.circle_id
+         JOIN group_goals g ON g.circle_id=actor.circle_id AND g.kind=? AND g.slot=? AND g.active=1
+         LEFT JOIN goal_choices actor_choice ON actor_choice.goal_id=g.id AND actor_choice.person_id=?
+         WHERE actor.person_id=? AND recipient.person_id=s.person_id AND COALESCE(actor_choice.enabled,1)=1)
+       OR (?='public' AND EXISTS (SELECT 1 FROM friendships f WHERE f.status='accepted' AND ((f.requester_id=? AND f.recipient_id=s.person_id) OR (f.recipient_id=? AND f.requester_id=s.person_id))))
+      ) LIMIT 100`).bind(actorId,kind,slot,actorId,actorId,privacy?.visibility||"group",actorId,actorId).all<SubscriptionRow>();
     const privateJWK=JSON.parse(env.VAPID_PRIVATE_JWK) as JsonWebKey;
     const title="Keep Pace · "+(actor?.name||"A friend");
     await Promise.allSettled(subscriptions.results.map(async s=>{

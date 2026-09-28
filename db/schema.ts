@@ -9,6 +9,8 @@ export const people = sqliteTable("people", {
   weekdayBed: text("weekday_bed").notNull().default("23:00"),
   reminderTime: text("reminder_time").notNull().default("20:00"),
   reminders: integer("reminders").notNull().default(0),
+  avatarKey: text("avatar_key"),
+  avatarType: text("avatar_type"),
 });
 
 export const circles = sqliteTable("circles", {
@@ -69,3 +71,34 @@ export const goalChoices = sqliteTable("goal_choices", {
   personId: text("person_id").notNull(),
   enabled: integer("enabled").notNull().default(1),
 }, t => [uniqueIndex("goal_choices_goal_person").on(t.goalId,t.personId),index("goal_choices_person").on(t.personId)]);
+
+export const friendships = sqliteTable("friendships", {
+  id: text("id").primaryKey(),
+  requesterId: text("requester_id").notNull(),
+  recipientId: text("recipient_id").notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: integer("created_at").notNull(),
+}, t => [uniqueIndex("friendships_pair").on(t.requesterId,t.recipientId),index("friendships_recipient").on(t.recipientId)]);
+
+export const habitVisibility = sqliteTable("habit_visibility", {
+  id: integer("id").primaryKey({autoIncrement:true}),
+  personId: text("person_id").notNull(),
+  kind: text("kind").notNull(),
+  slot: integer("slot").notNull().default(0),
+  visibility: text("visibility").notNull().default("group"),
+}, t => [uniqueIndex("habit_visibility_person_kind_slot").on(t.personId,t.kind,t.slot)]);
+
+export const feedLikes = sqliteTable("feed_likes", {
+  id: integer("id").primaryKey({autoIncrement:true}),
+  checkinId: text("checkin_id").notNull(),
+  personId: text("person_id").notNull(),
+  createdAt: integer("created_at").notNull(),
+}, t => [uniqueIndex("feed_likes_checkin_person").on(t.checkinId,t.personId)]);
+
+export const feedComments = sqliteTable("feed_comments", {
+  id: text("id").primaryKey(),
+  checkinId: text("checkin_id").notNull(),
+  personId: text("person_id").notNull(),
+  body: text("body").notNull(),
+  createdAt: integer("created_at").notNull(),
+}, t => [index("feed_comments_checkin").on(t.checkinId)]);
