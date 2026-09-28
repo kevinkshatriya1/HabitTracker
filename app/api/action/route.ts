@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
+import { notifyFriends } from "../../../lib/push";
 
 export const dynamic = "force-dynamic";
 const allowed = new Set(["wake","bed","makebed","workout","prep","drinks"]);
@@ -41,7 +42,7 @@ export async function POST(request:Request) {
     const kind=String(data.kind), date=data.date;
     const slot=kind==="workout" ? Number(data.slot) : 0;
     if (!Number.isInteger(slot) || slot<0 || slot>1) return Response.json({error:"Invalid workout slot."},{status:400});
-    const existing=await db.prepare("SELECT id,photo_key AS photoKey FROM checkins WHERE person_id=? AND date=? AND kind=? AND slot=?").bind(user.userId,date,kind,slot).first<{id:string;photoKey:string|null}>();
+    const existing=await db.prepare("SELECT id,photo_key AS photoKey,value FROM checkins WHERE person_id=? AND date=? AND kind=? AND slot=?").bind(user.userId,date,kind,slot).first<{id:string;photoKey:string|null;value:string|null}>();
     if (data.remove) {
       if (existing) {
         await db.prepare("DELETE FROM checkins WHERE id=?").bind(existing.id).run();
@@ -62,6 +63,10 @@ export async function POST(request:Request) {
     }
     const now=Date.now();
     await db.prepare("INSERT INTO checkins (id,person_id,date,kind,slot,value,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(person_id,date,kind,slot) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at").bind(existing?.id || crypto.randomUUID(),user.userId,date,kind,slot,value,now,now).run();
+    if (!existing || (kind==="drinks" && Number(value)>Number(existing.value||0))) {
+      const description=kind==="wake"?"logged their wake-up":kind==="bed"?"logged their bedtime":kind==="makebed"?"made their bed":kind==="workout"?"logged "+value:kind==="prep"?"finished Sunday meal prep":"logged a drink";
+      await notifyFriends(user.userId,date,description);
+    }
     return Response.json({ok:true});
   } catch(error) {
     console.error("action failed",error);

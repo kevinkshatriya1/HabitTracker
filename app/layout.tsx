@@ -7,7 +7,10 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
+    apple: "/icon-192.png",
   },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {capable:true,title:"Keep Pace",statusBarStyle:"default"},
 };
 
 export default function RootLayout({

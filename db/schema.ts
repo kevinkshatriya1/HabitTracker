@@ -38,3 +38,12 @@ export const checkins = sqliteTable("checkins", {
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
 }, t => [uniqueIndex("checkins_person_date_kind_slot").on(t.personId,t.date,t.kind,t.slot), index("checkins_person_date").on(t.personId,t.date)]);
+
+export const pushSubscriptions = sqliteTable("push_subscriptions", {
+  id: text("id").primaryKey(),
+  personId: text("person_id").notNull(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: integer("created_at").notNull(),
+}, t => [index("push_subscriptions_person").on(t.personId)]);

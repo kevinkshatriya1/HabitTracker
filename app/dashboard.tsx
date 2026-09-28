@@ -17,6 +17,9 @@ function dateKey(d:Date){return [d.getFullYear(),String(d.getMonth()+1).padStart
 function fromKey(key:string){const [y,m,d]=key.split("-").map(Number);return new Date(y,m-1,d)}
 function shift(d:Date,n:number){const out=new Date(d);out.setDate(out.getDate()+n);return out}
 function weekStart(d:Date){return shift(d,-(d.getDay()+6)%7)}
+function monthStart(d:Date){return new Date(d.getFullYear(),d.getMonth(),1)}
+function monthGridStart(d:Date){return weekStart(monthStart(d))}
+function monthGridEnd(d:Date){return shift(weekStart(new Date(d.getFullYear(),d.getMonth()+1,0)),6)}
 function fmtTime(t:string){const [h,m]=t.split(":").map(Number);return new Date(2020,0,1,h,m).toLocaleTimeString("en-US",{hour:"numeric",minute:m? "2-digit":undefined})}
 function initials(name:string){return name.split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()).join("")}
 function weekLabel(d:Date){const end=shift(d,6);return d.toLocaleDateString("en-US",{month:"long",day:"numeric"})+" – "+end.toLocaleDateString("en-US",{month:d.getMonth()===end.getMonth()?undefined:"short",day:"numeric",year:"numeric"})}
@@ -32,6 +35,8 @@ function Avatar({person,size="normal"}:{person:Person;size?:"normal"|"small"}){r
 
 export default function Dashboard(){
  const [start,setStart]=useState(()=>weekStart(new Date()));
+ const [view,setView]=useState<"week"|"month">("week");
+ const [month,setMonth]=useState(()=>monthStart(new Date()));
  const [selected,setSelected]=useState(todayKey);
  const [data,setData]=useState<State|null>(null);
  const [loading,setLoading]=useState(true);
@@ -46,30 +51,35 @@ export default function Dashboard(){
  const [settings,setSettings]=useState({name:"",weekdayWake:"07:00",weekendWake:"09:00",weekdayBed:"23:00",reminderTime:"20:00",reminders:false});
  const [inviteInput,setInviteInput]=useState("");
  const fileRef=useRef<HTMLInputElement>(null);
- const latestFriend=useRef<number|null>(null);
+ const [pushEnabled,setPushEnabled]=useState(false);
+ const [pushSupport,setPushSupport]=useState(true);
  const [photoFor,setPhotoFor]=useState<string|null>(null);
- const startKey=dateKey(start),endKey=dateKey(shift(start,6));
+ const rangeStart=view==="week"?start:monthGridStart(month);
+ const rangeEnd=view==="week"?shift(start,6):monthGridEnd(month);
 
  const load=useCallback(async(showLoading=false)=>{
    if(showLoading)setLoading(true);
    try {
-     const response=await fetch("/api/state?start="+dateKey(start)+"&end="+dateKey(shift(start,6)),{cache:"no-store"});
+     const response=await fetch("/api/state?start="+dateKey(rangeStart)+"&end="+dateKey(rangeEnd),{cache:"no-store"});
      const json=await response.json() as State & {error?:string};
      if(!response.ok)throw Error(json.error || "Could not load your calendar.");
-     const newest=Math.max(0,...json.checkins.filter(c=>c.personId!==json.me.id).map(c=>c.createdAt));
-     if(latestFriend.current!==null && newest>latestFriend.current && json.me.reminders && typeof Notification!=="undefined" && Notification.permission==="granted"){
-       const newEntry=json.checkins.find(c=>c.personId!==json.me.id && c.createdAt===newest);
-       const friend=json.people.find(p=>p.id===newEntry?.personId);
-       new Notification("New crew check-in",{body:(friend?.name||"A friend")+" just checked in."});
-     }
-     latestFriend.current=newest;
      setData(json);setError("");
      setSettings({name:json.me.name,weekdayWake:json.me.weekdayWake,weekendWake:json.me.weekendWake,weekdayBed:json.me.weekdayBed,reminderTime:json.me.reminderTime||"20:00",reminders:!!json.me.reminders});
    }catch(e){setError(e instanceof Error?e.message:"Could not load your calendar.")}
    finally{setLoading(false)}
- },[start]);
+ },[view,dateKey(rangeStart),dateKey(rangeEnd)]);
  useEffect(()=>{load(true)},[load]);
  useEffect(()=>{const id=setInterval(()=>load(),60_000);return()=>clearInterval(id)},[load]);
+ useEffect(()=>{
+   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {setPushSupport(false);return}
+   navigator.serviceWorker.register("/sw.js").then(async registration=>{
+     const subscription=await registration.pushManager.getSubscription();
+     setPushEnabled(!!subscription && Notification.permission==="granted");
+     if (subscription && Notification.permission==="granted") {
+       await fetch("/api/push",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(subscription.toJSON())});
+     }
+   }).catch(()=>setPushSupport(false));
+ },[]);
 
  const myEntries=useMemo(()=>data?.checkins.filter(c=>c.personId===data.me.id)||[],[data]);
  const selectedDate=fromKey(selected);
@@ -78,13 +88,23 @@ export default function Dashboard(){
  const find=(personId:string,date:string,kind:string,slot=0)=>data?.checkins.find(c=>c.personId===personId && c.date===date && c.kind===kind && c.slot===slot);
  const my=(kind:string,slot=0,date=selected)=>data?find(data.me.id,date,kind,slot):undefined;
  const sunday=dateKey(shift(start,6));
- const drinks=myEntries.filter(c=>c.kind==="drinks").reduce((n,c)=>n+Number(c.value||0),0);
+ const weekEntries=myEntries.filter(c=>c.date>=dateKey(start) && c.date<=dateKey(shift(start,6)));
+ const drinks=weekEntries.filter(c=>c.kind==="drinks").reduce((n,c)=>n+Number(c.value||0),0);
  const dayDone=dailyGoals.filter(g=>my(g.kind,g.slot)).length;
- const totalWeek=myEntries.filter(c=>c.kind!=="drinks").length;
+ const totalWeek=weekEntries.filter(c=>c.kind!=="drinks").length;
  const weekTarget=5*5+2*3+1;
  const weekRate=Math.min(100,Math.round(totalWeek/weekTarget*100));
  const recent=data?.checkins.filter(c=>c.personId!==data.me.id).slice(0,5)||[];
  const inviteUrl=typeof window!=="undefined" && data?window.location.origin+"/?join="+data.circle.inviteCode:"";
+ const monthDays=Array.from({length:new Date(month.getFullYear(),month.getMonth()+1,0).getDate()},(_,i)=>new Date(month.getFullYear(),month.getMonth(),i+1));
+ const summaryDays=monthDays.filter(day=>dateKey(day)<=todayKey());
+ const personProgress=(p:Person,day:Date)=>{
+   const key=dateKey(day);
+   const expected=goals(day,p).length+(day.getDay()===0?1:0);
+   const done=data?.checkins.filter(c=>c.personId===p.id&&c.date===key&&c.kind!=="drinks").length||0;
+   return {done:Math.min(done,expected),expected};
+ };
+ const crewColors=["#326e4f","#8eb83e","#8066ac","#d18648","#368c9e","#bf6d83"];
 
  useEffect(()=>{
   const code=new URLSearchParams(window.location.search).get("join");
@@ -122,6 +142,35 @@ export default function Dashboard(){
  }
  function choosePhoto(id:string){setPhotoFor(id);fileRef.current?.click()}
  function goWeek(n:number){const next=shift(start,n*7);setStart(next);setSelected(dateKey(next))}
+ function goMonth(n:number){const next=new Date(month.getFullYear(),month.getMonth()+n,1);setMonth(next);setStart(weekStart(next));setSelected(dateKey(next))}
+ async function enablePush(){
+   if (!pushSupport || !("Notification" in window)) {setError("On iPhone, add Keep Pace to your Home Screen, open it there, then turn on alerts.");return}
+   try {
+     // Ask directly from the button press, as required by iPhone.
+     const permission=await Notification.requestPermission();
+     if(permission!=="granted")throw Error("Notification permission wasn't granted. Enable it in your phone settings and try again.");
+     setSaving("Enabling phone alerts…");
+     const registration=await navigator.serviceWorker.register("/sw.js");
+     const response=await fetch("/api/push");
+     const result=await response.json() as {publicKey?:string;error?:string};
+     if(!response.ok||!result.publicKey)throw Error(result.error||"Phone alerts are unavailable.");
+     const padded=result.publicKey+"=".repeat((4-result.publicKey.length%4)%4);
+     const key=Uint8Array.from(atob(padded.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0)).buffer as ArrayBuffer;
+     const subscription=await registration.pushManager.getSubscription()||await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+     const saved=await fetch("/api/push",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(subscription.toJSON())});
+     if(!saved.ok){const body=await saved.json() as {error?:string};throw Error(body.error||"Could not save phone alerts.")}
+     setPushEnabled(true);setNotice("Phone alerts enabled");setTimeout(()=>setNotice(""),3000);setError("");
+   }catch(e){setError(e instanceof Error?e.message:"Could not enable phone alerts.")}
+   finally{setSaving("")}
+ }
+ async function disablePush(){
+   try{
+     const registration=await navigator.serviceWorker.ready;
+     const subscription=await registration.pushManager.getSubscription();
+     if(subscription){await fetch("/api/push",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint:subscription.endpoint})});await subscription.unsubscribe()}
+     setPushEnabled(false);setNotice("Phone alerts turned off");setTimeout(()=>setNotice(""),3000)
+   }catch(e){setError(e instanceof Error?e.message:"Could not turn off alerts.")}
+ }
  async function saveSettings(){if(settings.reminders && typeof Notification!=="undefined" && Notification.permission==="default"){const permission=await Notification.requestPermission();if(permission!=="granted"){setError("Browser notifications were not enabled. You can still use in-app reminders while this page is open.");setSettings({...settings,reminders:false});return}}
   const ok=await action({action:"settings",...settings});if(ok)setModal("")}
  async function copyInvite(){try{await navigator.clipboard.writeText(inviteUrl);setNotice("Invite link copied");setTimeout(()=>setNotice(""),3000)}catch{setError("Copy unavailable. Select the link below to share it.")}}
@@ -136,14 +185,15 @@ export default function Dashboard(){
    <div className="side-bottom"><div className="sidebar-note"><span className="note-spark">✳</span><strong>Consistency is a team sport.</strong><span>A little proof goes a long way.</span></div><div className="profile"><Avatar person={data?.me||{id:"",name:"You",email:"",weekdayWake:"",weekendWake:"",weekdayBed:""}}/><span><strong>{data?.me.name||"Your space"}</strong><small>{data?.circle.name||"Accountability calendar"}</small></span><button aria-label="Settings" onClick={()=>setModal("settings")}><Settings2 size={17}/></button></div></div>
   </aside>
   <main className="main-area">
-   <header className="topbar"><div className="mobile-brand"><span className="brand-icon">K<span>↗</span></span> keep pace.</div><div className="crumb">YOUR WEEK <ChevronRight size={15}/> <strong>{data?.circle.name||"Calendar"}</strong></div><div className="header-actions"><button className="icon-button" aria-label="Goal settings" onClick={()=>setModal("settings")}><Settings2 size={19}/></button><button className="invite-button" onClick={()=>setModal("share")}><Share2 size={17}/> <span>Invite friends</span></button></div></header>
+   <header className="topbar"><div className="mobile-brand"><span className="brand-icon">K<span>↗</span></span> keep pace.</div><div className="crumb">YOUR CALENDAR <ChevronRight size={15}/> <strong>{data?.circle.name||"Calendar"}</strong></div><div className="header-actions"><button className="icon-button" aria-label="Goal settings" onClick={()=>setModal("settings")}><Settings2 size={19}/></button><button className="invite-button" onClick={()=>setModal("share")}><Share2 size={17}/> <span>Invite friends</span></button></div></header>
    <div className="content">
-    <section className="intro"><div><p className="eyebrow">THE ACCOUNTABILITY CALENDAR</p><h1>Make this week count<span className="period">.</span></h1><p>Small wins. Every day. Better together.</p></div><div className="week-score"><div className="score-ring" style={{background:"conic-gradient(#c8f35e "+weekRate+"%, #e9eee6 0)"}}><span>{weekRate}%</span></div><div><strong>Weekly progress</strong><small>{totalWeek} of {weekTarget} check-ins</small></div></div></section>
+    <section className="intro"><div><p className="eyebrow">THE ACCOUNTABILITY CALENDAR</p><h1>Make this {view==="month"?"month":"week"} count<span className="period">.</span></h1><p>Small wins. Every day. Better together.</p></div><div className="week-score"><div className="score-ring" style={{background:"conic-gradient(#c8f35e "+weekRate+"%, #e9eee6 0)"}}><span>{weekRate}%</span></div><div><strong>Selected week</strong><small>{totalWeek} of {weekTarget} check-ins</small></div></div></section>
     {error&&<div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" onClick={()=>setError("")}><X size={17}/></button></div>}
     {notice&&<div className="notice" role="status"><Check size={16}/>{notice}</div>}
     <section className="calendar-panel">
-     <div className="panel-heading"><div><span className="section-kicker">YOUR CALENDAR</span><h2>{weekLabel(start)}</h2></div><div className="calendar-nav"><button onClick={()=>goWeek(-1)} aria-label="Previous week"><ArrowLeft size={19}/></button><button className="today-nav" onClick={()=>{const now=new Date();setStart(weekStart(now));setSelected(dateKey(now))}}>Today</button><button onClick={()=>goWeek(1)} aria-label="Next week"><ArrowRight size={19}/></button></div></div>
-     <div className="week-grid">{Array.from({length:7},(_,i)=>{const day=shift(start,i),key=dateKey(day),entries=myEntries.filter(c=>c.date===key && c.kind!=="drinks"),target=i>=5?3:5;return <button key={key} className={"day-tile "+(selected===key?"selected ":"")+(key===todayKey()?"today ":"")} onClick={()=>setSelected(key)}><span className="day-name">{day.toLocaleDateString("en-US",{weekday:"short"})}</span><strong>{day.getDate()}</strong><span className="day-progress"><span style={{width:Math.min(100,entries.length/target*100)+"%"}}/></span><small>{entries.length}/{target}</small></button>})}</div>
+     <div className="panel-heading"><div><span className="section-kicker">YOUR CALENDAR</span><h2>{view==="month"?month.toLocaleDateString("en-US",{month:"long",year:"numeric"}):weekLabel(start)}</h2></div><div className="calendar-tools"><div className="view-toggle" aria-label="Calendar view"><button className={view==="week"?"active":""} aria-pressed={view==="week"} onClick={()=>setView("week")}>Week</button><button className={view==="month"?"active":""} aria-pressed={view==="month"} onClick={()=>{setMonth(monthStart(fromKey(selected)));setView("month")}}>Month</button></div><div className="calendar-nav"><button onClick={()=>view==="month"?goMonth(-1):goWeek(-1)} aria-label={"Previous "+view}><ArrowLeft size={19}/></button><button className="today-nav" onClick={()=>{const now=new Date();setStart(weekStart(now));setMonth(monthStart(now));setSelected(dateKey(now))}}>Today</button><button onClick={()=>view==="month"?goMonth(1):goWeek(1)} aria-label={"Next "+view}><ArrowRight size={19}/></button></div></div></div>
+     {view==="week"?<div className="week-grid">{Array.from({length:7},(_,i)=>{const day=shift(start,i),key=dateKey(day),entries=myEntries.filter(c=>c.date===key && c.kind!=="drinks"),target=i>=5?3:5;return <button key={key} className={"day-tile "+(selected===key?"selected ":"")+(key===todayKey()?"today ":"")} onClick={()=>setSelected(key)}><span className="day-name">{day.toLocaleDateString("en-US",{weekday:"short"})}</span><strong>{day.getDate()}</strong><span className="day-progress"><span style={{width:Math.min(100,entries.length/target*100)+"%"}}/></span><small>{entries.length}/{target}</small></button>})}</div>:
+     <div className="month-view"><p className="month-explain">Check-ins completed ÷ daily goals. Sunday includes meal prep. Future days are excluded from totals.</p><div className="month-standings">{data?.people.map((person,i)=>{const stats=summaryDays.reduce((sum,day)=>{const x=personProgress(person,day);return {done:sum.done+x.done,expected:sum.expected+x.expected}},{done:0,expected:0});return <div className="month-standing" key={person.id}><span className="standing-dot" style={{background:crewColors[i%crewColors.length]}}/><div><strong>{person.id===data.me.id?"You":person.name.split(" ")[0]}</strong><small>{stats.done}/{stats.expected} goals</small></div><b>{stats.expected?Math.round(stats.done/stats.expected*100):0}%</b></div>})}</div><div className="month-scroll"><div className="month-weekdays">{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=><span key={x}>{x}</span>)}</div><div className="month-grid">{Array.from({length:Math.round((monthGridEnd(month).getTime()-monthGridStart(month).getTime())/86400000)+1},(_,i)=>{const day=shift(monthGridStart(month),i),key=dateKey(day),out=day.getMonth()!==month.getMonth();return <button key={key} className={"month-day "+(out?"outside ":"")+(selected===key?"selected ":"")+(key===todayKey()?"today":"")} onClick={()=>{setSelected(key);setStart(weekStart(day));if(out)setMonth(monthStart(day))}} aria-label={day.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}><span className="month-day-number">{day.getDate()}</span><div className="month-person-list">{data?.people.map((p,j)=>{const x=personProgress(p,day);return <span className="month-person" key={p.id} title={p.name+": "+x.done+" of "+x.expected+" goals"}><i style={{background:crewColors[j%crewColors.length],opacity:.25+.75*x.done/x.expected}}/><span className="month-person-name">{p.id===data.me.id?"You":p.name.split(" ")[0]}</span><b>{x.done}/{x.expected}</b></span>})}</div></button>})}</div></div><div className="selected-day-team"><strong>{selectedDate.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"})} · Crew progress</strong><div>{data?.people.map((p,i)=>{const x=personProgress(p,selectedDate);return <span key={p.id}><i style={{background:crewColors[i%crewColors.length]}}/>{p.id===data.me.id?"You":p.name.split(" ")[0]} <b>{x.done}/{x.expected}</b></span>})}</div></div></div>}
     </section>
     <div className="below-grid">
      <section className="daily-panel"><div className="panel-heading daily-heading"><div><span className="section-kicker">{selected===todayKey()?"TODAY'S CHECKLIST":"DAILY CHECKLIST"}</span><h2>{selectedDate.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</h2></div><span className="goal-count">{goalCount} done</span></div>
@@ -164,7 +214,7 @@ export default function Dashboard(){
     <footer className="footer"><span>Keep Pace <span>↗</span></span><a href="/signout-with-chatgpt?return_to=%2F">Sign out</a></footer>
    </div>
   </main>
-  <Dialog open={modal==="settings"} onOpenChange={v=>setModal(v?"settings":"")}><DialogContent className="app-dialog"><DialogHeader><DialogTitle>Goals & reminders</DialogTitle><DialogDescription>Set targets that work for your schedule.</DialogDescription></DialogHeader><div className="form-grid"><label>Your name<Input maxLength={50} value={settings.name} onChange={e=>setSettings({...settings,name:e.target.value})}/></label><label>Weekday wake-up<Input type="time" value={settings.weekdayWake} onChange={e=>setSettings({...settings,weekdayWake:e.target.value})}/></label><label>Weekend wake-up<Input type="time" value={settings.weekendWake} onChange={e=>setSettings({...settings,weekendWake:e.target.value})}/></label><label>Weekday bedtime<Input type="time" value={settings.weekdayBed} onChange={e=>setSettings({...settings,weekdayBed:e.target.value})}/></label><label>Daily reminder time<Input type="time" value={settings.reminderTime} onChange={e=>setSettings({...settings,reminderTime:e.target.value})}/></label></div><div className="reminder-row"><div><strong>Browser reminder</strong><small>Alerts when this page is open and your check-ins are incomplete.</small></div><Switch checked={settings.reminders} onCheckedChange={v=>setSettings({...settings,reminders:v})} aria-label="Enable browser reminders"/></div><Button className="modal-primary" disabled={!!saving} onClick={saveSettings}>Save goals</Button></DialogContent></Dialog>
+  <Dialog open={modal==="settings"} onOpenChange={v=>setModal(v?"settings":"")}><DialogContent className="app-dialog"><DialogHeader><DialogTitle>Goals & reminders</DialogTitle><DialogDescription>Set targets that work for your schedule.</DialogDescription></DialogHeader><div className="form-grid"><label>Your name<Input maxLength={50} value={settings.name} onChange={e=>setSettings({...settings,name:e.target.value})}/></label><label>Weekday wake-up<Input type="time" value={settings.weekdayWake} onChange={e=>setSettings({...settings,weekdayWake:e.target.value})}/></label><label>Weekend wake-up<Input type="time" value={settings.weekendWake} onChange={e=>setSettings({...settings,weekendWake:e.target.value})}/></label><label>Weekday bedtime<Input type="time" value={settings.weekdayBed} onChange={e=>setSettings({...settings,weekdayBed:e.target.value})}/></label><label>Daily reminder time<Input type="time" value={settings.reminderTime} onChange={e=>setSettings({...settings,reminderTime:e.target.value})}/></label></div><div className="reminder-row"><div><strong>Browser reminder</strong><small>Alerts when this page is open and your check-ins are incomplete.</small></div><Switch checked={settings.reminders} onCheckedChange={v=>setSettings({...settings,reminders:v})} aria-label="Enable browser reminders"/></div><div className="push-setting"><span className="push-icon"><Bell size={19}/></span><div><strong>Friend activity on your phone</strong><small>Get a push when a friend logs a goal or adds a photo, even when the app is closed. Each friend turns this on separately.</small><small>On iPhone: Safari → Share → Add to Home Screen; open the new icon, then enable alerts here.</small></div><Button variant={pushEnabled?"outline":"default"} onClick={pushEnabled?disablePush:enablePush} disabled={!!saving}>{pushEnabled?"Turn off":"Enable"}</Button></div>{error&&<p className="dialog-error" role="alert">{error}</p>}<Button className="modal-primary" disabled={!!saving} onClick={saveSettings}>Save goals</Button></DialogContent></Dialog>
   <Dialog open={modal==="share"} onOpenChange={v=>{setModal(v?"share":"");if(!v)history.replaceState(null,"","/")}}><DialogContent className="app-dialog"><DialogHeader><DialogTitle>Bring your crew in</DialogTitle><DialogDescription>Everyone who joins can view each other's check-ins and photos.</DialogDescription></DialogHeader><div className="invite-card"><span className="invite-symbol"><Link2 size={23}/></span><strong>Share your group link</strong><p>Send this to your friends. They'll sign in and join {data?.circle.name}.</p><div className="copy-row"><Input readOnly value={inviteUrl} onFocus={e=>e.target.select()}/><Button onClick={copyInvite}>Copy</Button></div></div><div className="join-section"><strong>Have an invite from a friend?</strong><div className="copy-row"><Input value={inviteInput} placeholder="Paste link or invite code" onChange={e=>setInviteInput(e.target.value)}/><Button variant="outline" disabled={!inviteInput.trim()||!!saving} onClick={join}>Join</Button></div></div></DialogContent></Dialog>
   <Dialog open={modal==="workout"} onOpenChange={v=>setModal(v?"workout":"")}><DialogContent className="app-dialog"><DialogHeader><DialogTitle>Log your workout</DialogTitle><DialogDescription>What did you do for workout {workSlot+1}?</DialogDescription></DialogHeader><div className="workout-options">{["Lift","Cardio","Golf","Other"].map(x=><button key={x} className={workType===x?"picked":""} onClick={()=>setWorkType(x)}>{x}</button>)}</div><Button className="modal-primary" disabled={!!saving} onClick={async()=>{const ok=await action({action:"checkin",kind:"workout",slot:workSlot,date:selected,value:workType});if(ok)setModal("")}}>Log workout</Button></DialogContent></Dialog>
   <Dialog open={!!timeGoal} onOpenChange={v=>{if(!v)setTimeGoal("")}}><DialogContent className="app-dialog"><DialogHeader><DialogTitle>Log {timeGoal==="wake"?"wake-up":"bedtime"}</DialogTitle><DialogDescription>Record the actual time for {selectedDate.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}.</DialogDescription></DialogHeader><label className="time-entry">Actual time<Input type="time" value={actualTime} onChange={e=>setActualTime(e.target.value)}/></label><div className="time-actions">{my(timeGoal)&&<Button variant="outline" onClick={async()=>{const ok=await action({action:"checkin",kind:timeGoal,date:selected,remove:true});if(ok)setTimeGoal("")}}>Remove check-in</Button>}<Button className="modal-primary" disabled={!!saving} onClick={async()=>{const ok=await action({action:"checkin",kind:timeGoal,date:selected,value:actualTime});if(ok)setTimeGoal("")}}>Save time</Button></div></DialogContent></Dialog>
