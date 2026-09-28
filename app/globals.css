@@ -795,3 +795,60 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  .progress-card:hover,.feed-card:hover,[data-slot=button]:active,.icon-button:active,.invite-button:active{transform:none}
  .goal-row.completed .goal-toggle,.mini-check.checked{animation:none}
 }
+
+/* ============================================================
+   Stopwatch redesign — a training-log read instead of a soft
+   SaaS card kit. One track-red spark on cool stone paper (not
+   cream+terracotta), numbers get scoreboard weight in a technical
+   grotesque, checklist rows read as a marked-up logbook, and text
+   fields draw in an ink underline on focus instead of a glow ring.
+   ============================================================ */
+:root{--background:#eeefe9;--foreground:#1b1d22;--card:#fff;--card-foreground:#1b1d22;--primary:#e4461f;--primary-foreground:#fff;--secondary:#e6e8e0;--secondary-foreground:#2e3242;--muted:#e6e8e0;--muted-foreground:#7b8072;--accent:#fdeee7;--accent-foreground:#c23a18;--border:#dfe1d6;--input:#dfe1d6;--ring:#e4461f;--radius:.85rem;--coral:#ff6a45;--periwinkle:#3856c9}
+body{font-family:var(--font-body),Inter,system-ui,sans-serif;letter-spacing:-.005em}
+h1,h2,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.week-score strong{font-family:var(--font-display),"Space Grotesk",sans-serif}
+.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.drinks-count,.month-standing b,.order-number{font-variant-numeric:tabular-nums}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--primary)}
+
+/* Shape: dial back the stadium-pill-everywhere look; panels get a considered radius, pills stay only on things you press */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card{border-radius:14px}
+.day-tile,.month-day,.feed-calendar-day{border-radius:10px}
+.app-dialog{border-radius:18px}
+.photo-thumb,.activity-photo{border-radius:10px}
+.weekly-icon,.push-icon,.invite-symbol{border-radius:10px}
+.goal-toggle,.mini-check{border-radius:5px}
+
+/* Hero: a flat scoreboard strip, not another soft floating card */
+.intro{box-shadow:none;border-radius:14px}
+.intro:after{width:190px;height:190px;right:-55px;top:-100px;border-width:2px;border-color:#ffffff17}
+.intro .eyebrow{letter-spacing:0;text-transform:none}
+
+/* Labels read in sentence case with a colored tick, not tracked-out caps */
+.side-label,.section-kicker,.eyebrow,.crumb,.goal-schedule h3,.order-section h3,.profile-section-label{letter-spacing:0;text-transform:none;font-size:12px}
+.section-kicker,.month-explain+.section-kicker{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+.section-kicker:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block;flex:none}
+.goal-schedule h3,.order-section h3{font-size:12px;font-weight:700}
+.eyebrow{color:var(--primary)}
+.signin{background:radial-gradient(circle at 80% 20%,var(--accent),transparent 32%),var(--background)}
+.signin-card{border-color:var(--border)}
+.primary-link{background:var(--primary)}
+.primary-link:hover{background:#c23a18}
+
+/* Retire the last first-generation greens and icy-blue panels that three earlier
+   redesign passes never reached, so the whole app reads as one palette */
+.participation-tab{color:var(--periwinkle);border-color:var(--border);background:var(--card)}
+.participation-tab:hover{border-color:var(--primary);background:var(--accent)}
+.group-add{color:var(--periwinkle)}
+.participation-group-name{color:var(--muted-foreground)}
+.goal-source{color:var(--periwinkle)}
+.load-feed{color:var(--periwinkle);border-color:var(--border)}
+.push-icon{background:var(--accent);color:var(--primary)}
+.topbar,.weekly-panel,.day-tile,.friend-panel{background:#fff}
+
+/* Interactive text boxes: an ink underline draws in on focus instead of a generic glow */
+input,textarea,[data-slot=input],[data-slot=select-trigger]{transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease}
+input:hover,textarea:hover,[data-slot=input]:hover,[data-slot=select-trigger]:hover{border-color:var(--muted-foreground)}
+input:focus,textarea:focus,[data-slot=input]:focus-within,[data-slot=select-trigger]:focus{border-color:var(--primary);box-shadow:inset 0 -3px 0 0 var(--primary)}
+
+@media(prefers-reduced-motion:reduce){
+ input,textarea,[data-slot=input],[data-slot=select-trigger]{transition:none}
+}
