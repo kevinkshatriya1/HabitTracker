@@ -47,3 +47,22 @@ export const pushSubscriptions = sqliteTable("push_subscriptions", {
   auth: text("auth").notNull(),
   createdAt: integer("created_at").notNull(),
 }, t => [index("push_subscriptions_person").on(t.personId)]);
+
+export const groupGoals = sqliteTable("group_goals", {
+  id: text("id").primaryKey(),
+  circleId: text("circle_id").notNull(),
+  kind: text("kind").notNull(),
+  slot: integer("slot").notNull().default(0),
+  title: text("title").notNull(),
+  cadence: text("cadence").notNull(),
+  target: text("target"),
+  active: integer("active").notNull().default(1),
+  createdAt: integer("created_at").notNull(),
+}, t => [uniqueIndex("group_goals_circle_kind_slot").on(t.circleId,t.kind,t.slot),index("group_goals_circle").on(t.circleId)]);
+
+export const goalChoices = sqliteTable("goal_choices", {
+  id: integer("id").primaryKey({autoIncrement:true}),
+  goalId: text("goal_id").notNull(),
+  personId: text("person_id").notNull(),
+  enabled: integer("enabled").notNull().default(1),
+}, t => [uniqueIndex("goal_choices_goal_person").on(t.goalId,t.personId),index("goal_choices_person").on(t.personId)]);

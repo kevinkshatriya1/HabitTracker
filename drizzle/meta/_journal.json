@@ -15,6 +15,13 @@
       "when": 1790602289135,
       "tag": "0001_amazing_maverick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790603229892,
+      "tag": "0002_concerned_venus",
+      "breakpoints": true
     }
   ]
 }
