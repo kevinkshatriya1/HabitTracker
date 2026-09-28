@@ -804,7 +804,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
    nav, chips stay pill), and snappy non-bouncy motion instead of
    spring overshoot. No decorative blobs or gradients.
    ============================================================ */
-:root{--background:#0e0f11;--foreground:#eef0f2;--card:#17181b;--card-foreground:#eef0f2;--primary:#3ecf8e;--primary-foreground:#0e0f11;--secondary:#1c1e21;--secondary-foreground:#c6c8cc;--muted:#1a1b1e;--muted-foreground:#8b8d93;--accent:#142019;--accent-foreground:#3ecf8e;--border:#2a2c30;--input:#2a2c30;--ring:#3ecf8e;--radius:.5rem;--coral:#f0725a;--periwinkle:#6c8ef0;--font-display:var(--font-body)}
+:root{--background:#1b1c1f;--foreground:#e9eaec;--card:#232428;--card-foreground:#e9eaec;--primary:#3ecf8e;--primary-foreground:#16171a;--secondary:#2a2c30;--secondary-foreground:#c6c8cc;--muted:#292b2f;--muted-foreground:#96989e;--accent:#1e2b25;--accent-foreground:#3ecf8e;--border:#37393e;--input:#37393e;--ring:#3ecf8e;--radius:.5rem;--coral:#f0725a;--periwinkle:#6c8ef0;--font-display:var(--font-body)}
 body{font-family:var(--font-body),Manrope,system-ui,sans-serif;letter-spacing:-.005em}
 h1,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.stat-number{font-family:var(--font-display),Manrope,sans-serif;font-weight:700}
 .day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.month-standing b,.order-number,.stat-number{font-variant-numeric:tabular-nums}
