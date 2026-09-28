@@ -1,5 +1,16 @@
 # Keep Pace changelog
 
+## 2026-09-28 15:01 EDT — Anti-slop redesign: kinetic typography & spring animations
+- Replace Inter/Avenir with Outfit font (300–900 weights) throughout.
+- Add 10 kinetic keyframes (kp-fade-up, kp-shimmer, kp-ticker, kp-pulse-ring, kp-float, kp-wipe, etc.) and a `--spring` cubic-bezier easing variable.
+- Intro hero gains radial gradient orbs with pulse-ring backdrop; all section h1s shimmer with a coral→periwinkle gradient animation.
+- Sidebar note replaced with a scrolling marquee ticker (6 motivational phrases, 18s loop).
+- Progress cards and profile stat cards redesigned with double-bezel depth, staggered nth-child entry animations, and spring hover lift.
+- Profile hero: dark gradient with floating orbs; all profile sections get 24px radius + staggered fade-up.
+- Feed cards: 20px radius, staggered entry, spring hover lift.
+- Bottom nav: coral glow box-shadow on active item; pill tabs scale(1.02) on active state.
+- Group cards: translateX slide-right on hover with color-matched glow shadow.
+
 Times use America/New_York. The Git commits preserve the source for each release.
 
 ## 2026-09-28 18:47 EDT — My Profile page + pill tabs
