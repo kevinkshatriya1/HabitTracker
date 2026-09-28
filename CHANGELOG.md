@@ -2,6 +2,10 @@
 
 Times use America/New_York. The Git commits preserve the source for each release.
 
+## 2026-09-28 18:47 EDT — My Profile page + pill tabs
+- Build out the My Profile tab (previously blank): large avatar hero on a dark card, 3 progress rings (Today/This Week/This Month), schedule grid (wake/bed/reminder times), per-group goal pills with invite link, and per-goal privacy selectors.
+- Restyle the Me / Feed sub-tabs from underline style to a pill segmented-control (white chip on a grey pill background, spring shadow).
+
 ## 2026-09-28 12:29 EDT — Bubbly redesign (`5a7fe52`)
 - Recolor the interface around a coral primary and periwinkle secondary, replacing the muted ink/slate palette; crew colors are punchier and now reach the hero banner and bottom navigation, not just the calendar.
 - Round out shapes across cards, dialogs, and buttons, add tinted shadows, and give buttons, cards, and completed check-ins a springy hover/pop animation (respecting reduced-motion preferences).

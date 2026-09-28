@@ -289,6 +289,59 @@ export default function Dashboard(){
     {section==="group"&&<div className="group-strip"><div className="group-chips">{data?.groups.map(group=><button key={group.id} className={group.id===data.circle.id?"active":""} onClick={()=>{setGroupId(group.id);setCalendarPerson("all");setCalendarTask("all")}}>{group.name}</button>)}</div><button className="group-add" onClick={()=>setModal("newgroup")}><Plus size={16}/> New group</button><button className="group-add" onClick={()=>setModal("share")}><Link2 size={16}/> Join / invite</button>{data?.circle.ownerId===data?.me.id&&<button className="group-add" onClick={()=>{setGroupName(data!.circle.name);setGroupColor(data!.circle.color);setModal("editgroup")}}><Settings2 size={16}/> Edit group</button>}</div>}
     {section==="me"&&<div className="me-tabs"><button className={meTab==="activity"?"active":""} onClick={()=>setMeTab("activity")}>My Activity</button><button className={meTab==="profile"?"active":""} onClick={()=>setMeTab("profile")}>My Profile</button></div>}
     {section==="me"&&meTab==="activity"&&<button className="participation-tab" onClick={()=>setModal("participation")}><CheckCircle2 size={16}/><span>Goals you're taking part in</span><small>{data?scopeGoals.filter(g=>chosen(data.me.id,g.id)).length:0} active</small><ChevronRight size={16}/></button>}
+    {section==="me"&&meTab==="profile"&&<section className="profile-page">
+      <div className="profile-hero">
+        <div className="profile-avatar-wrap">
+          <label className="profile-avatar-label" title="Change photo">
+            <Avatar person={data?.me||{id:"",name:"You",email:"",weekdayWake:"",weekendWake:"",weekdayBed:""}}/>
+            <span className="profile-avatar-overlay"><Camera size={16}/></span>
+            <Input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="sr-only" onChange={e=>uploadAvatar(e.target.files?.[0]||null)}/>
+          </label>
+        </div>
+        <div className="profile-hero-info">
+          <h2 className="profile-name">{data?.me.name||"Your name"}</h2>
+          <p className="profile-email">{data?.me.email||""}</p>
+          <div className="profile-badges">
+            {data?.groups.map(g=><span key={g.id} className="profile-badge" style={{"--badge-color":g.color} as React.CSSProperties}>{g.name}</span>)}
+          </div>
+        </div>
+        <button className="profile-edit-btn" onClick={()=>setModal("settings")}><Settings2 size={16}/> Edit</button>
+      </div>
+
+      <div className="profile-stats-row">
+        {progressCircles.map(({label,stats,color})=>{const rate=stats.expected?Math.round(stats.done/stats.expected*100):0;return(
+          <div className="profile-stat-card" key={label} style={{"--stat-color":color} as React.CSSProperties}>
+            <div className="profile-stat-ring" style={{background:`conic-gradient(${color} ${rate}%, #ece4d6 0)`}}>
+              <span>{rate}<i>%</i></span>
+            </div>
+            <strong>{label}</strong>
+            <small>{stats.done}/{stats.expected}</small>
+          </div>
+        )})}
+      </div>
+
+      <div className="profile-schedule">
+        <h3 className="profile-section-label">YOUR SCHEDULE</h3>
+        <div className="profile-schedule-grid">
+          <div className="profile-schedule-item"><span className="psi-icon"><Sunrise size={17}/></span><div><strong>Weekday wake-up</strong><span>{fmtTime(data?.me.weekdayWake||"07:00")}</span></div></div>
+          <div className="profile-schedule-item"><span className="psi-icon"><Sunrise size={17}/></span><div><strong>Weekend wake-up</strong><span>{fmtTime(data?.me.weekendWake||"09:00")}</span></div></div>
+          <div className="profile-schedule-item"><span className="psi-icon"><Clock3 size={17}/></span><div><strong>Bedtime</strong><span>{fmtTime(data?.me.weekdayBed||"23:00")}</span></div></div>
+          <div className="profile-schedule-item"><span className="psi-icon"><Bell size={17}/></span><div><strong>Daily reminder</strong><span>{data?.me.reminderTime?fmtTime(data.me.reminderTime):"Off"}</span></div></div>
+        </div>
+      </div>
+
+      <div className="profile-groups-section">
+        <h3 className="profile-section-label">YOUR CREWS</h3>
+        {data?.groups.length?<div className="profile-groups-list">{data.groups.map(g=>{const members=data.memberships.filter(m=>m.circleId===g.id).length;const myGoals=sortGoals(data.goals.filter(x=>x.circleId===g.id&&x.active&&chosen(data.me.id,x.id)));return(<div className="profile-group-card" key={g.id} style={{"--g-color":g.color} as React.CSSProperties}><div className="pgc-top"><span className="pgc-dot"/><strong>{g.name}</strong><small>{members} member{members!==1?"s":""}</small></div><div className="pgc-goals">{myGoals.slice(0,4).map(x=><span key={x.id}>{x.title}</span>)}{myGoals.length>4&&<span>+{myGoals.length-4} more</span>}</div><button className="pgc-invite" onClick={()=>{setGroupId(g.id);setModal("share")}}><Link2 size={13}/> Invite</button></div>)})}</div>:<p className="empty-weekly">No groups yet. Join one with an invite link or create your own.</p>}
+        <button className="profile-new-group-btn" onClick={()=>setModal("newgroup")}><Plus size={15}/> New group</button>
+      </div>
+
+      <div className="profile-privacy-section">
+        <h3 className="profile-section-label">VISIBILITY</h3>
+        <p className="profile-privacy-note">Choose who can see each habit in the feed.</p>
+        <div className="profile-privacy-list">{privacyGoals.map(g=>{const visibility=data?.privacy.find(x=>x.personId===data?.me.id&&x.kind===g.kind&&x.slot===g.slot)?.visibility||"group";return(<label className="profile-privacy-row" key={g.kind+g.slot}><span>{g.title}</span><select value={visibility} onChange={e=>action({action:"privacy",kind:g.kind,slot:g.slot,visibility:e.target.value})}><option value="private">Only me</option><option value="group">My groups</option><option value="public">Public</option></select></label>)})}</div>
+      </div>
+    </section>}
     {error&&<div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" onClick={()=>setError("")}><X size={17}/></button></div>}
     {notice&&<div className="notice" role="status"><Check size={16}/>{notice}</div>}
     {section==="group"&&<div className="compare-filters"><label>Person<select value={calendarPerson} onChange={e=>setCalendarPerson(e.target.value)}><option value="all">Everyone</option>{groupPeople.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Task<select value={calendarTask} onChange={e=>setCalendarTask(e.target.value)}><option value="all">All tasks</option>{groupGoals.filter((g,i,a)=>a.findIndex(x=>x.kind===g.kind&&x.slot===g.slot)===i).map(g=><option key={g.id} value={g.kind+":"+g.slot}>{g.title}</option>)}</select></label></div>}
