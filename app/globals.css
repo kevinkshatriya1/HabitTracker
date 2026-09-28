@@ -17,7 +17,8 @@
 .crew-week-standings{display:flex;flex-direction:column;gap:9px;margin-top:20px;padding-top:16px;border-top:1px solid #e9eee5}.crew-week-standings>div{display:flex;align-items:center;gap:7px;font-size:12px}.crew-week-standings i{width:8px;height:8px;border-radius:50%;flex:none}.crew-week-standings span{flex:1;color:#657868}.crew-week-standings strong{font-size:12px}
 
 .participation-tab{display:inline-flex;align-items:center;gap:8px;max-width:100%;margin:0 0 18px;padding:10px 13px;border:1px solid #dce7d8;border-radius:9px;background:#fff;color:#355d3d;font-size:12px;font-weight:800;cursor:pointer}.participation-tab:hover{border-color:#9ac655;background:#f8fbf5}.participation-tab small{color:#7f957b;font-size:11px;font-weight:600;white-space:nowrap}.participation-dialog{max-width:680px;max-height:85vh;overflow-y:auto}.participation-dialog .participation-groups{margin-top:12px}
-.compare-filters{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 18px}.compare-filters label{display:flex;flex-direction:column;gap:6px;min-width:135px;font-size:12px;font-weight:700;color:#5f7462}.compare-filters select{border:1px solid #dbe4d8;border-radius:8px;background:#fff;color:#23392b;padding:9px 12px;font-size:14px;max-width:210px}.group-theme .period,.group-theme .eyebrow{color:var(--group-color)}.group-theme .section-tabs button.active{border-color:var(--group-color);color:var(--group-color)}.group-theme .group-chips button.active{background:var(--group-color);border-color:var(--group-color)}.group-theme .participation-tab{color:var(--group-color);border-color:var(--group-color)}.group-theme .day-tile.selected,.group-theme .month-day.selected{border-color:var(--group-color);background:color-mix(in srgb,var(--group-color) 10%,white)}.group-theme .day-progress span{background:var(--group-color)}.group-theme .view-toggle button.active{background:var(--group-color)}.week-people{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:10px;line-height:1.2}.week-people>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.week-people i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}.group-day-breakdown{margin-top:20px;border-top:1px solid #e6ece4;padding-top:17px}.group-day-breakdown h3{font-size:16px;margin:0 0 12px}.group-person-day{padding:12px;border:1px solid #e5e9e5;border-radius:9px;margin-bottom:9px}.group-person-day>strong{font-size:14px}.group-person-day>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.group-person-day span{padding:6px 8px;border-radius:7px;background:#f1f2f1;color:#738176;font-size:12px}.group-person-day .task-done{background:color-mix(in srgb,var(--group-color) 12%,white);color:#243b2c}.feed-panel{background:white;border:1px solid #e0e8db;border-radius:15px;padding:25px 27px}.feed-panel .compare-filters{margin-top:23px}.feed-card{display:flex;gap:12px;border-top:1px solid #edf0e9;padding:17px 0}.feed-card>div:last-child{flex:1;min-width:0}.feed-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.feed-top strong{font-size:15px}.feed-top small{font-size:12px;color:#839286}.feed-card p{font-size:14px;margin-top:5px}.feed-card .feed-description{color:#5f6c61;margin-top:8px;white-space:pre-wrap}.feed-exercise{display:block;font-size:12px;color:#627466;margin-top:5px}.feed-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.feed-tags span{border-left:3px solid var(--tag-color);background:color-mix(in srgb,var(--tag-color) 12%,white);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:700}.color-picker{margin-top:14px}.color-picker strong,.group-goals-edit>strong,.workout-form>strong{font-size:14px}.color-picker>div{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px}.color-picker button{width:35px;height:35px;border-radius:50%;border:2px solid white;color:white;display:grid;place-items:center}.color-picker button.selected{outline:2px solid #26382d;outline-offset:2px}.edit-group-dialog{max-width:640px}.group-goals-edit{border-top:1px solid #e5ece0;margin-top:19px;padding-top:19px}.group-goals-edit p{font-size:12px;color:#7e8d7d;margin:7px 0 16px}.log-dialog{max-width:550px}.workout-form{display:grid;gap:10px;margin-top:15px}.workout-form textarea{min-height:65px;resize:vertical;border:1px solid #dfe6dc;border-radius:8px;padding:10px;font:inherit;font-size:14px}.workout-form .workout-options{grid-template-columns:repeat(3,1fr)}.workout-form .workout-options button{padding:10px}.exercise-heading{display:flex;align-items:center;justify-content:space-between}.exercise-heading strong{font-size:13px}.exercise-heading button,.exercise-row button{display:inline-flex;align-items:center;gap:3px;border:0;background:transparent;color:#4c7153;font-size:12px}.exercise-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 22px;gap:5px}.exercise-row input{min-width:0;font-size:12px;padding:5px}.log-dialog .time-actions{margin-top:14px}
+.compare-filters{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 18px}.compare-filters label{display:flex;flex-direction:column;gap:6px;min-width:135px;font-size:12px;font-weight:700;color:#5f7462}.compare-filters select{border:1px solid #dbe4d8;border-radius:8px;background:#fff;color:#23392b;padding:9px 12px;font-size:14px;max-width:210px}.group-theme .period,.group-theme .eyebrow{color:var(--group-color)}.group-theme .section-tabs button.active{border-color:var(--group-color);color:var(--group-color)}.group-theme .group-chips button.active{background:var(--group-color);border-color:var(--group-color)}.group-theme .participation-tab{color:var(--group-color);border-color:var(--group-color)}.group-theme .day-tile.selected,.group-theme .month-day.selected{border-color:var(--group-color);background:color-mix(in srgb,var(--group-color) 10%,white)}.group-theme .day-progress span{background:var(--group-color)}.group-theme .view-toggle button.active{background:var(--group-color)}.week-people{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:10px;line-height:1.2}.week-people>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.week-people i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}.group-day-breakdown{margin-top:20px;border-top:1px solid #e6ece4;padding-top:17px}.group-day-breakdown h3{font-size:16px;margin:0 0 12px}.group-person-day{padding:12px;border:1px solid #e5e9e5;border-radius:9px;margin-bottom:9px}.group-person-day>strong{font-size:14px}.group-person-day>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.group-person-day span{padding:6px 8px;border-radius:7px;background:#f1f2f1;color:#738176;font-size:12px}.group-person-day .task-done{background:color-mix(in srgb,var(--group-color) 12%,white);color:#243b2c}.feed-panel{background:white;border:1px solid #e0e8db;border-radius:15px;padding:25px 27px}.feed-panel .compare-filters{margin-top:23px}.feed-card{display:flex;gap:12px;border-top:1px solid #edf0e9;padding:17px 0}.feed-card>div:last-child{flex:1;min-width:0}.feed-top{display:flex;align-items:baseline;justify-content:flex-start;gap:8px;flex-wrap:wrap}
+.feed-card>.avatar{width:42px;height:42px}.feed-top strong{font-size:15px}.feed-top small{font-size:12px;color:#839286}.feed-card p{font-size:14px;margin-top:5px}.feed-card .feed-description{color:#5f6c61;margin-top:8px;white-space:pre-wrap}.feed-exercise{display:block;font-size:12px;color:#627466;margin-top:5px}.feed-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.feed-tags span{border-left:3px solid var(--tag-color);background:color-mix(in srgb,var(--tag-color) 12%,white);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:700}.color-picker{margin-top:14px}.color-picker strong,.group-goals-edit>strong,.workout-form>strong{font-size:14px}.color-picker>div{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px}.color-picker button{width:35px;height:35px;border-radius:50%;border:2px solid white;color:white;display:grid;place-items:center}.color-picker button.selected{outline:2px solid #26382d;outline-offset:2px}.edit-group-dialog{max-width:640px}.group-goals-edit{border-top:1px solid #e5ece0;margin-top:19px;padding-top:19px}.group-goals-edit p{font-size:12px;color:#7e8d7d;margin:7px 0 16px}.log-dialog{max-width:550px}.workout-form{display:grid;gap:10px;margin-top:15px}.workout-form textarea{min-height:65px;resize:vertical;border:1px solid #dfe6dc;border-radius:8px;padding:10px;font:inherit;font-size:14px}.workout-form .workout-options{grid-template-columns:repeat(3,1fr)}.workout-form .workout-options button{padding:10px}.exercise-heading{display:flex;align-items:center;justify-content:space-between}.exercise-heading strong{font-size:13px}.exercise-heading button,.exercise-row button{display:inline-flex;align-items:center;gap:3px;border:0;background:transparent;color:#4c7153;font-size:12px}.exercise-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 22px;gap:5px}.exercise-row input{min-width:0;font-size:12px;padding:5px}.log-dialog .time-actions{margin-top:14px}
 @media(max-width:580px){.feed-panel{padding:19px 15px}.compare-filters{gap:8px}.compare-filters label{min-width:calc(50% - 8px)}.compare-filters select{width:100%;min-width:0}.week-people{display:none}.week-grid .day-tile:has(.week-people){min-height:100px}.group-person-day>div{flex-direction:column}.exercise-row{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 20px}}
 .feed-calendar{border-top:1px solid #e6ece4;margin-top:26px;padding-top:22px}.feed-calendar .panel-heading{flex-wrap:wrap}.feed-calendar-scroll{overflow-x:auto;margin-top:18px}.feed-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(95px,1fr));gap:6px;min-width:720px}.feed-calendar-day{text-align:left;min-height:96px;border:1px solid #e5ece4;border-radius:9px;background:#fbfcfa;padding:9px 7px;display:flex;flex-direction:column;gap:5px}.feed-calendar-day.selected{border-color:#92c757;background:#f1f8e7}.feed-calendar-day>strong{font-size:12px}.feed-calendar-day>span{display:flex;align-items:center;gap:4px;min-width:0;white-space:nowrap;font-size:10px;color:#5b705d}.feed-calendar-day i{width:6px;height:6px;border-radius:50%;flex:none}.feed-calendar-day b{margin-left:auto}.feed-calendar-note{font-size:12px!important;color:#7b8e7e;margin-top:10px!important}.drink-log-button{font-size:12px;font-weight:800;padding:6px 10px!important;width:auto!important;border-radius:7px!important}
 @media(max-width:580px){.feed-calendar-grid{min-width:0;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.feed-calendar-day{min-height:65px;padding:5px 3px}.feed-calendar-day>strong{font-size:10px}.feed-calendar-day>span{font-size:9px}.feed-calendar-day>span i{display:none}.feed-calendar-day>span b{margin-left:0}.feed-calendar-day>span{display:block;overflow:hidden;text-overflow:ellipsis}.week-people{display:flex}.week-people>span{font-size:8px}.week-people i{display:none}.week-grid .day-tile:has(.week-people){min-height:150px}}
@@ -797,85 +798,111 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 }
 
 /* ============================================================
-   Field log redesign — kills the dark rounded hero card, the
-   white-bento-with-shadow card kit, and the conic-gradient percentage
-   rings; those are the actual AI-dashboard tells, not the color or
-   font alone. One track-red spark on cool stone paper, a condensed
-   headline face reserved for the masthead and stat numerals, flat
-   bordered panels instead of soft elevation, and a ruled checklist
-   that sits on the page instead of inside another box.
+   Lush field redesign — the flat/bordered pass read as cold and
+   boxy. This keeps the real fixes (no gauge rings, no glow shadows,
+   numbers as the hero) but swaps the palette for a warm cream and a
+   lush forest green, brings back generous rounded corners and soft
+   warm-tinted elevation instead of hairline borders, and adds real
+   hover/press feedback so the page feels alive under your hand.
    ============================================================ */
-:root{--background:#eeefe9;--foreground:#1b1d22;--card:#fff;--card-foreground:#1b1d22;--primary:#e4461f;--primary-foreground:#fff;--secondary:#e6e8e0;--secondary-foreground:#2e3242;--muted:#e6e8e0;--muted-foreground:#7b8072;--accent:#fdeee7;--accent-foreground:#c23a18;--border:#d8dacd;--input:#d8dacd;--ring:#e4461f;--radius:.5rem;--coral:#ff6a45;--periwinkle:#3856c9}
+:root{--background:#faf3e3;--foreground:#2d3826;--card:#fffdf6;--card-foreground:#2d3826;--primary:#3f7d4a;--primary-foreground:#fff;--secondary:#e7efd8;--secondary-foreground:#355c3d;--muted:#efe6d0;--muted-foreground:#8a7f63;--accent:#edf3df;--accent-foreground:#3f7d4a;--border:#e9dfc4;--input:#e9dfc4;--ring:#3f7d4a;--radius:1.1rem;--coral:#e2825a;--periwinkle:#b8752f}
 body{font-family:var(--font-body),Manrope,system-ui,sans-serif;letter-spacing:-.005em}
 h1,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.stat-number{font-family:var(--font-display),Oswald,sans-serif;font-weight:700}
 .day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.month-standing b,.order-number,.stat-number{font-variant-numeric:tabular-nums}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--primary)}
 
-/* Shape: one small radius everywhere except the things you press */
-.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.day-tile,.month-day,.feed-calendar-day,.app-dialog,.photo-thumb,.activity-photo,.weekly-icon,.push-icon,.invite-symbol{border-radius:6px}
-.goal-toggle,.mini-check{border-radius:4px}
-.calendar-nav button,.view-toggle,.view-toggle button,.group-chips button,.participation-tab,.group-add{border-radius:6px}
+/* Shape: one generous, warm radius everywhere, a bigger pill only on things you press */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.feed-card,.friend-panel,.app-dialog,.profile-stat-card{border-radius:20px}
+.day-tile,.month-day,.feed-calendar-day,.photo-thumb,.activity-photo,.weekly-icon,.push-icon,.invite-symbol{border-radius:14px}
+.goal-toggle,.mini-check{border-radius:9px}
+.calendar-nav button,.view-toggle,.group-chips button,.participation-tab,.group-add{border-radius:12px}
 
-/* Flat panels instead of soft-shadow elevation; a border does the same job of grouping without the floating-card look */
-.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.feed-card,.friend-panel{box-shadow:none;border:1.5px solid var(--border)}
-.progress-card:hover,.feed-card:hover{transform:none}
+/* Soft warm elevation instead of hairline borders; panels lift gently on hover, like picking something up */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.feed-card,.friend-panel{border:1px solid var(--border);box-shadow:0 10px 28px -18px rgba(45,56,38,.35),0 2px 8px rgba(45,56,38,.05);transition:transform .18s ease,box-shadow .18s ease}
+.progress-card:hover,.feed-card:hover{transform:translateY(-3px);box-shadow:0 16px 32px -16px rgba(45,56,38,.28),0 3px 10px rgba(45,56,38,.07)}
 
-/* Hero: no boxed dark card. The masthead sits flush on the page with one rule under it, like a printed log header. */
-.intro{background:none;color:var(--foreground);border-radius:0;box-shadow:none;padding:0 0 22px;min-height:0;border-bottom:2px solid var(--foreground);overflow:visible}
-.intro:before,.intro:after{display:none}
+/* Hero: a calm sage surface instead of a dark corporate card or a bare ruled line - warm, rounded, inviting */
+.intro{background:var(--accent);color:var(--foreground);border-radius:24px;box-shadow:none;padding:26px 28px;min-height:0;border-bottom:0;overflow:hidden;position:relative}
+.intro:before{display:block;content:"";position:absolute;width:260px;height:260px;right:-90px;top:-120px;border-radius:50%;background:radial-gradient(circle,rgba(63,125,74,.14) 0%,transparent 70%);pointer-events:none}
+.intro:after{display:none}
 .intro h1{font-family:var(--font-display),Oswald,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
 .intro p:last-child{color:var(--muted-foreground)}
 .intro .eyebrow{letter-spacing:0;text-transform:none;color:var(--primary)}
-.week-score{background:none;border:1.5px solid var(--foreground);color:var(--foreground);box-shadow:none;backdrop-filter:none}
+.week-score{background:#fff;border:1px solid var(--border);color:var(--foreground);box-shadow:0 6px 18px -12px rgba(45,56,38,.3);backdrop-filter:none;border-radius:16px;padding:12px 18px}
 .week-score strong{color:var(--foreground)}
 .week-score small{color:var(--muted-foreground)}
-.group-theme .intro{background:var(--group-color);color:#fff;padding:22px 24px;border-bottom:0}
-.group-theme .intro .eyebrow{color:#fff;opacity:.75}
-.group-theme .intro h1{color:#fff}
-.group-theme .intro p:last-child{color:#ffffffcc}
-.group-theme .week-score{border-color:#ffffff4d;color:#fff}
-.group-theme .week-score strong{color:#fff}
-.group-theme .week-score small{color:#ffffffb3}
+.group-theme .intro{background:color-mix(in srgb,var(--group-color) 16%,var(--background));border-bottom:0}
+.group-theme .intro:before{background:radial-gradient(circle,color-mix(in srgb,var(--group-color) 30%,transparent) 0%,transparent 70%)}
+.group-theme .intro .eyebrow{color:var(--group-color)}
+.group-theme .intro h1{color:var(--foreground)}
+.group-theme .intro p:last-child{color:var(--muted-foreground)}
+.group-theme .week-score{border-color:var(--border);color:var(--foreground)}
+.group-theme .week-score strong{color:var(--foreground)}
+.group-theme .week-score small{color:var(--muted-foreground)}
 
-/* Numbers are the hero: kill the conic-gradient gauge, keep the number and a plain-language label */
+/* Numbers are the hero: kill the conic-gradient gauge, keep the number and a plain-language label, warm sticker tiles */
 .progress-ring,.score-ring,.profile-stat-ring{background:none!important;width:auto;height:auto;border-radius:0;display:block}
-.progress-ring>span,.score-ring span,.profile-stat-ring span{background:none;width:auto;height:auto;border-radius:0;display:block;font-size:32px;color:var(--progress-color,var(--primary));line-height:1}
-.score-ring span{color:#fff}
-.group-theme .score-ring span{color:var(--foreground)}
+.progress-ring>span,.score-ring span,.profile-stat-ring span{background:none;width:auto;height:auto;border-radius:0;display:block;font-size:34px;color:var(--progress-color,var(--primary));line-height:1}
+.score-ring span{color:var(--primary)}
 .progress-card,.week-score{display:flex;align-items:center;gap:14px}
+.progress-card{background:color-mix(in srgb,var(--progress-color,var(--primary)) 7%,var(--card))}
 .profile-stat-ring span i{font-style:normal;font-size:14px;margin-left:2px;opacity:.6}
+.profile-stat-card{background:color-mix(in srgb,var(--stat-color,var(--primary)) 7%,var(--card))}
 
 /* Labels read in sentence case, no tracked caps, no decorative dot */
 .side-label,.section-kicker,.eyebrow,.crumb,.goal-schedule h3,.order-section h3,.profile-section-label{letter-spacing:0;text-transform:none;font-size:12px;font-weight:700}
 .eyebrow{color:var(--primary)}
-.signin{background:var(--background)}
-.signin-card{border-color:var(--border);box-shadow:none;border-width:1.5px}
-.primary-link{background:var(--primary);border-radius:6px}
-.primary-link:hover{background:#c23a18}
+.signin{background:radial-gradient(circle at 80% 15%,var(--accent),transparent 45%),var(--background)}
+.signin-card{border-color:var(--border);box-shadow:0 20px 50px -20px rgba(45,56,38,.3);border-width:1px;border-radius:24px}
+.primary-link{background:var(--primary);border-radius:14px;transition:background .15s ease,transform .15s ease}
+.primary-link:hover{background:#356b3f}
+.primary-link:active{transform:scale(.98)}
 
-/* Daily checklist reads as a ruled log page, not a card inside a card */
-.daily-panel{background:none;border:0;padding:0}
-.goal-row{border-top:1.5px solid var(--foreground)}
-.goal-row:last-child{border-bottom:1.5px solid var(--foreground)}
+/* Daily checklist: a soft warm card again, rows breathe instead of being fenced by hairlines, and light up gently on hover */
+.daily-panel{background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 10px 28px -18px rgba(45,56,38,.35),0 2px 8px rgba(45,56,38,.05);padding:25px 27px}
+.goal-row{border-top:1px solid var(--border);border-radius:12px;transition:background .15s ease}
+.goal-row:last-child{border-bottom:1px solid var(--border)}
+.goal-row:hover{background:var(--accent)}
 .panel-footnote{padding-bottom:4px}
 
-/* Profile hero: kill the purple-gradient glow card, same flush treatment as the main hero */
-.profile-hero{background:none;border-radius:0;box-shadow:none;padding:0 0 22px;border-bottom:2px solid var(--foreground)}
-.profile-hero:before,.profile-hero:after{display:none}
+/* Profile hero: same calm sage surface as the main hero, no purple gradient glow */
+.profile-hero{background:var(--accent);border-radius:24px;box-shadow:none;padding:26px 24px;border-bottom:0;overflow:hidden}
+.profile-hero:before{background:radial-gradient(circle,rgba(63,125,74,.16) 0%,transparent 70%);right:-90px;top:-120px}
+.profile-hero:after{display:none}
 .profile-name{font-family:var(--font-display),Oswald,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
 .profile-email{color:var(--muted-foreground)}
-.profile-avatar-label .avatar{border-color:var(--border);box-shadow:none}
-.profile-avatar-overlay{border-color:var(--background)}
-.profile-badge{background:var(--secondary);color:var(--secondary-foreground);border-color:var(--border)}
-.profile-edit-btn{background:none;border:1.5px solid var(--foreground);color:var(--foreground);border-radius:6px}
+.profile-avatar-label .avatar{border-color:var(--card);box-shadow:0 4px 14px rgba(45,56,38,.18)}
+.profile-avatar-overlay{border-color:var(--accent)}
+.profile-badge{background:var(--card);color:var(--secondary-foreground);border-color:var(--border)}
+.profile-edit-btn{background:var(--card);border:1px solid var(--border);color:var(--foreground);border-radius:12px;transition:background .15s ease,transform .15s ease}
 .profile-edit-btn:hover{background:var(--foreground);color:var(--background)}
-.profile-stat-card{border-radius:6px;box-shadow:none;border:1.5px solid var(--border)}
+.profile-edit-btn:active{transform:scale(.96)}
 
-.app-dialog{box-shadow:none;border:1.5px solid var(--foreground)}
+.app-dialog{box-shadow:0 30px 70px -25px rgba(45,56,38,.4);border:1px solid var(--border)}
 
-/* Bottom nav: drop the glow shadows and heavy floating elevation, keep the pill since it's what you press */
-.bottom-nav{border-radius:16px!important;box-shadow:none!important;border-color:var(--border)!important}
-.bottom-nav button.active{box-shadow:none!important}
+/* Bottom nav: warm forest bar, a terracotta pop for the active tab, tactile press feedback */
+.bottom-nav{border-radius:20px!important;box-shadow:0 18px 40px -16px rgba(45,56,38,.5)!important;border-color:transparent!important;background:var(--foreground)!important}
+.bottom-nav button{color:#ffffff99!important}
+.bottom-nav button:hover{color:#fff!important;background:#ffffff14!important}
+.bottom-nav button.active{background:var(--coral)!important;color:#fff!important;box-shadow:none!important}
+.bottom-nav button:active{transform:scale(.94)!important}
+
+/* Tactile press feedback on the things you tap most */
+[data-slot=button],.icon-button,.invite-button,.group-chips button,.calendar-nav button,.view-toggle button,.participation-tab,.group-add,.primary-link,.profile-edit-btn{transition:transform .15s cubic-bezier(.34,1.56,.64,1),background-color .15s ease,color .15s ease,border-color .15s ease}
+[data-slot=button]:active,.icon-button:active,.invite-button:active,.group-chips button:active,.calendar-nav button:active,.view-toggle button:active,.participation-tab:active,.group-add:active{transform:scale(.95)}
+.goal-toggle,.mini-check{transition:transform .15s cubic-bezier(.34,1.56,.64,1),background-color .15s ease,border-color .15s ease}
+.goal-toggle:active,.mini-check:active{transform:scale(.88)}
+@keyframes lush-pop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+.goal-row.completed .goal-toggle,.mini-check.checked{animation:lush-pop .4s cubic-bezier(.34,1.56,.64,1)}
+.day-tile,.month-day{transition:transform .18s ease,border-color .18s ease,background-color .18s ease}
+.day-tile:hover,.month-day:hover{transform:translateY(-2px)}
+.section-tabs button,.me-tabs button,.feed-tabs button{transition:background-color .18s ease,color .18s ease}
+
+@media(prefers-reduced-motion:reduce){
+ .calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.feed-card,.friend-panel,[data-slot=button],.icon-button,.invite-button,.group-chips button,.calendar-nav button,.goal-toggle,.mini-check,.day-tile,.month-day,.primary-link,.profile-edit-btn{transition:none}
+ .progress-card:hover,.feed-card:hover,.day-tile:hover,.month-day:hover,[data-slot=button]:active,.icon-button:active,.invite-button:active,.goal-toggle:active,.mini-check:active,.bottom-nav button:active,.primary-link:active,.profile-edit-btn:active{transform:none}
+ .goal-row.completed .goal-toggle,.mini-check.checked{animation:none}
+}
 
 /* Retire the last first-generation greens and icy-blue panels that earlier
    redesign passes never reached, so the whole app reads as one palette */
