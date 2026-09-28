@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex, index } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text, uniqueIndex, index } from "drizzle-orm/sqlite-core";
 
 export const people = sqliteTable("people", {
   id: text("id").primaryKey(),
@@ -61,6 +61,7 @@ export const groupGoals = sqliteTable("group_goals", {
   title: text("title").notNull(),
   cadence: text("cadence").notNull(),
   target: text("target"),
+  preferredMinutes: integer("preferred_minutes").notNull().default(720),
   active: integer("active").notNull().default(1),
   createdAt: integer("created_at").notNull(),
 }, t => [uniqueIndex("group_goals_circle_kind_slot").on(t.circleId,t.kind,t.slot),index("group_goals_circle").on(t.circleId)]);
@@ -102,3 +103,11 @@ export const feedComments = sqliteTable("feed_comments", {
   body: text("body").notNull(),
   createdAt: integer("created_at").notNull(),
 }, t => [index("feed_comments_checkin").on(t.checkinId)]);
+
+export const goalOrder = sqliteTable("goal_order", {
+  id: integer("id").primaryKey({autoIncrement:true}),
+  personId: text("person_id").notNull(),
+  kind: text("kind").notNull(),
+  slot: integer("slot").notNull().default(0),
+  rank: real("rank").notNull(),
+}, t => [uniqueIndex("goal_order_person_kind_slot").on(t.personId,t.kind,t.slot)]);

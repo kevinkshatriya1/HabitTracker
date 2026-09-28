@@ -1,10 +1,10 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { notifyFriends } from "../../../lib/push";
-import { seedGoals } from "../../../lib/goals";
+import { seedGoals, inferGoalMinutes, cadenceOrder } from "../../../lib/goals";
 
 export const dynamic = "force-dynamic";
-const palette = ["#5B5FC7","#CB5B73","#C27A24","#267F9D","#8159A8","#B45A49","#287B75","#8C6480"];
+const palette = ["#4566B5","#128390","#805AA8","#B47A2B","#B25F82","#367E6B","#5978A1","#B9664E"];
 const allowed = new Set(["wake","bed","makebed","workout","prep","drinks"]);
 const validDate = (x:unknown):x is string => typeof x==="string" && /^\d{4}-\d{2}-\d{2}$/.test(x) && !Number.isNaN(Date.parse(x+"T12:00:00Z"));
 const validTime = (x:unknown):x is string => typeof x==="string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(x);
@@ -66,14 +66,30 @@ export async function POST(request:Request) {
       const title=String(data.title||"").trim().slice(0,70);
       const cadence=String(data.cadence||"");
       if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence))return Response.json({error:"Enter a goal and schedule."},{status:400});
+      const requestedTime=String(data.preferredTime||"");
+      if(requestedTime && !validTime(requestedTime))return Response.json({error:"Enter a valid typical time."},{status:400});
+      const preferredMinutes=requestedTime?Number(requestedTime.slice(0,2))*60+Number(requestedTime.slice(3)):inferGoalMinutes(title);
       const id=crypto.randomUUID();
       const normalized=title.toLowerCase().replace(/\s+/g," ").trim()+"|"+cadence;
       const hash=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(normalized));
       const kind="custom:"+Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,24);
       const existingGoal=await db.prepare("SELECT id FROM group_goals WHERE circle_id=? AND kind=?").bind(circleId,kind).first();
       if(existingGoal)return Response.json({error:"This group already has that goal. Turn it on above if it's paused."},{status:409});
-      await db.prepare("INSERT INTO group_goals (id,circle_id,kind,slot,title,cadence,target,active,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(id,circleId,kind,0,title,cadence,null,1,Date.now()).run();
+      await db.prepare("INSERT INTO group_goals (id,circle_id,kind,slot,title,cadence,target,preferred_minutes,active,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(id,circleId,kind,0,title,cadence,null,preferredMinutes,1,Date.now()).run();
       await db.prepare("INSERT INTO goal_choices (goal_id,person_id,enabled) SELECT ?,person_id,CASE WHEN person_id=? THEN 1 ELSE 0 END FROM members WHERE circle_id=?").bind(id,user.userId,circleId).run();
+      return Response.json({ok:true});
+    }
+    if (data.action==="goal_reorder") {
+      const cadence=String(data.cadence||"");
+      const order=Array.isArray(data.order)?data.order as {kind?:unknown;slot?:unknown}[]:[];
+      if(!(cadence in cadenceOrder)||order.length<2||order.length>100)return Response.json({error:"Choose goals in the same schedule."},{status:400});
+      const available=(await db.prepare("SELECT g.kind,g.slot,MIN(g.preferred_minutes) AS preferredMinutes FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE m.person_id=? AND g.cadence=? AND g.active=1 GROUP BY g.kind,g.slot").bind(user.userId,cadence).all<{kind:string;slot:number;preferredMinutes:number}>()).results;
+      const keyed=new Map(available.map(g=>[g.kind+":"+g.slot,g]));
+      const keys=order.map(g=>String(g.kind||"")+":"+Number(g.slot));
+      if(new Set(keys).size!==keys.length||keys.length!==keyed.size||keys.some(k=>!keyed.has(k)))return Response.json({error:"One of these goals isn't available."},{status:403});
+      // Keep custom order on a time-of-day scale so future goals slot in naturally.
+      const anchors=available.map(g=>g.preferredMinutes).sort((a,b)=>a-b);
+      await db.batch(order.map((g,i)=>db.prepare("INSERT INTO goal_order (person_id,kind,slot,rank) VALUES (?,?,?,?) ON CONFLICT(person_id,kind,slot) DO UPDATE SET rank=excluded.rank").bind(user.userId,String(g.kind),Number(g.slot),anchors[i]+i*0.001)));
       return Response.json({ok:true});
     }
     if (data.action==="privacy") {
