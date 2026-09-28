@@ -8,7 +8,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{join?:s
   if (!user) {
     const invite=(await searchParams).join;
     const returnTo=invite && /^[A-Z0-9]{8}$/i.test(invite)?"/?join="+encodeURIComponent(invite):"/";
-    return <main className="signin"><div className="signin-card"><div className="logo-mark">K<span>↗</span></div><p className="eyebrow">YOUR CREW, YOUR COMMITMENTS</p><h1>Show up for yourself.<br/>Let your friends see it.</h1><p>Track your routines, post proof, and stay accountable together.</p><a className="primary-link" href={chatGPTSignInPath(returnTo)} target="_top">Sign in with ChatGPT <span>↗</span></a></div></main>;
+    return <main className="signin"><div className="signin-card"><div className="logo-mark">K<span>↗</span></div><p className="eyebrow">Your crew, your commitments</p><h1>Show up for yourself.<br/>Let your friends see it.</h1><p>Track your routines, post proof, and stay accountable together.</p><a className="primary-link" href={chatGPTSignInPath(returnTo)} target="_top">Sign in with ChatGPT</a></div></main>;
   }
   return <Dashboard />;
 }
