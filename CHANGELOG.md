@@ -2,6 +2,10 @@
 
 Times use America/New_York. The Git commits preserve the source for each release.
 
+## 2026-09-28 12:29 EDT — Bubbly redesign (`5a7fe52`)
+- Recolor the interface around a coral primary and periwinkle secondary, replacing the muted ink/slate palette; crew colors are punchier and now reach the hero banner and bottom navigation, not just the calendar.
+- Round out shapes across cards, dialogs, and buttons, add tinted shadows, and give buttons, cards, and completed check-ins a springy hover/pop animation (respecting reduced-motion preferences).
+
 ## 2026-09-28 10:49 EDT — Goal order and visual refresh
 - Group goals by occurrence (daily, weekdays, weekends, Sunday, weekly) and automatically place new goals around their typical time. Group owners can optionally specify a typical time.
 - Let each member move participating goals earlier or later in the compact Individual participation panel; save the order per person.
