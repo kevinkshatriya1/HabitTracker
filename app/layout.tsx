@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Oswald, Manrope } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-const displayFont = Oswald({
-  subsets: ["latin"],
-  weight: ["500", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
 const bodyFont = Manrope({
   subsets: ["latin"],
   variable: "--font-body",
@@ -32,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={displayFont.variable + " " + bodyFont.variable}>
+    <html lang="en" className={bodyFont.variable}>
       <body className="antialiased">{children}</body>
     </html>
   );
