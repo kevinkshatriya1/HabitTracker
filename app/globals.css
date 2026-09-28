@@ -804,9 +804,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
    nav, chips stay pill), and snappy non-bouncy motion instead of
    spring overshoot. No decorative blobs or gradients.
    ============================================================ */
-:root{--background:#1b1c1f;--foreground:#e9eaec;--card:#232428;--card-foreground:#e9eaec;--primary:#3ecf8e;--primary-foreground:#16171a;--secondary:#2a2c30;--secondary-foreground:#c6c8cc;--muted:#292b2f;--muted-foreground:#96989e;--accent:#1e2b25;--accent-foreground:#3ecf8e;--border:#37393e;--input:#37393e;--ring:#3ecf8e;--radius:.5rem;--coral:#f0725a;--periwinkle:#6c8ef0;--font-display:var(--font-body)}
-body{font-family:var(--font-body),Manrope,system-ui,sans-serif;letter-spacing:-.005em}
-h1,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.stat-number{font-family:var(--font-display),Manrope,sans-serif;font-weight:700}
+:root{--background:#fbfdfa;--foreground:#1e261f;--card:#ffffff;--card-foreground:#1e261f;--primary:#16a34a;--primary-foreground:#ffffff;--secondary:#eaf6ee;--secondary-foreground:#166534;--muted:#f1f4f0;--muted-foreground:#6b7568;--accent:#eaf9ef;--accent-foreground:#16a34a;--border:#e2e8e1;--input:#e2e8e1;--ring:#16a34a;--radius:.75rem;--coral:#f0725a;--periwinkle:#6c8ef0;--font-display:var(--font-body)}
+body{font-family:var(--font-body),Nunito,system-ui,sans-serif;letter-spacing:-.005em}
+h1,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.stat-number{font-family:var(--font-display),Nunito,sans-serif;font-weight:700}
 .day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.month-standing b,.order-number,.stat-number{font-variant-numeric:tabular-nums}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--primary)}
 
@@ -823,7 +823,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 /* Hero: a plain elevated surface, no decorative blob or color wash. The group hero gets a thin colored rule instead of a full tint, like a status label. */
 .intro{background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:10px;box-shadow:none;padding:22px 24px;min-height:0;border-bottom:1px solid var(--border);overflow:visible;position:relative}
 .intro:before,.intro:after{display:none}
-.intro h1{font-family:var(--font-display),Manrope,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
+.intro h1{font-family:var(--font-display),Nunito,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
 .intro p:last-child{color:var(--muted-foreground)}
 .intro .eyebrow{letter-spacing:0;text-transform:none;color:var(--primary)}
 .week-score{background:var(--background);border:1px solid var(--border);color:var(--foreground);box-shadow:none;backdrop-filter:none;border-radius:8px;padding:12px 18px}
@@ -864,7 +864,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 /* Profile hero: same plain surface as the main hero */
 .profile-hero{background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:none;padding:22px 24px;overflow:visible}
 .profile-hero:before,.profile-hero:after{display:none}
-.profile-name{font-family:var(--font-display),Manrope,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
+.profile-name{font-family:var(--font-display),Nunito,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
 .profile-email{color:var(--muted-foreground)}
 .profile-avatar-label .avatar{border-color:var(--border);box-shadow:none}
 .profile-avatar-overlay{border-color:var(--card)}
