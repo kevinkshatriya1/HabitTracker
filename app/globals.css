@@ -39,3 +39,66 @@ body{background:#f0f3f6;color:#182335;font-family:var(--font-sans);letter-spacin
 .individual-theme .content{display:flex;flex-direction:column}.individual-theme .content>.below-grid{order:1}.individual-theme .content>.calendar-panel{order:2;margin-top:23px}.individual-theme .content>.footer{order:3}
 @media(max-width:760px){.topbar{height:68px;padding:0 17px}.content{padding:17px 15px 100px}.intro{padding:23px 22px;border-radius:17px;min-height:138px}.intro h1{font-size:32px}.bottom-nav{left:10px!important;right:10px!important;bottom:9px!important;width:auto!important}.mobile-brand{font-size:17px}.crumb{display:none}}
 @media(prefers-reduced-motion:reduce){.day-tile,.bottom-nav button{transition:none}.day-tile:hover,.bottom-nav button:hover{transform:none}}
+
+/* ============================================================
+   Bubbly refresh — recolors and reshapes the app above without
+   touching markup. One warm coral primary + one cool periwinkle
+   secondary, reused everywhere; crew colors get punchier and
+   reach further (nav, hero); shapes go rounder; small springy
+   motion on the things people tap most.
+   ============================================================ */
+:root{--background:#faf6f0;--foreground:#20233a;--card:#fff;--card-foreground:#20233a;--popover:#fff;--popover-foreground:#20233a;--primary:#c43a1f;--primary-foreground:#fff;--secondary:#eef0ff;--secondary-foreground:#4655d6;--muted:#f4efe6;--muted-foreground:#7c7768;--accent:#fff0e8;--accent-foreground:#c43a1f;--border:#ece4d6;--input:#ece4d6;--ring:#ff8062;--radius:1rem;--coral:#ff6f59;--periwinkle:#4655d6}
+body{background:var(--background);color:var(--foreground)}
+.app-shell,.topbar{background:var(--background)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--coral)}
+
+/* Shape: one soft rounded system across the app */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card{border-radius:22px}
+.day-tile,.month-day,.feed-calendar-day{border-radius:16px}
+.app-dialog{border-radius:26px}
+.photo-thumb,.activity-photo{border-radius:14px}
+.weekly-icon,.push-icon,.invite-symbol{border-radius:14px}
+.goal-toggle,.mini-check{border-radius:10px}
+[data-slot=button]{border-radius:999px}
+[data-slot=input],[data-slot=select-trigger],.workout-form textarea{border-radius:12px}
+.invite-button,.icon-button,.calendar-nav button,.group-add,.group-chips button,.participation-tab,.view-toggle,.view-toggle button{border-radius:999px}
+.drink-log-button{border-radius:999px!important}
+.color-picker button{border-radius:50%}
+
+/* Color: one warm coral primary, one cool periwinkle secondary, reused everywhere */
+.goal-icon,.log-button,.photo-action,.link-button,.weekly-photo{color:var(--periwinkle)}
+.goal-row.completed .goal-toggle,.mini-check.checked{background:var(--primary);border-color:var(--primary);color:#fff}
+.day-progress span,.drinks-meter span{background:var(--coral)}
+.drinks-count.over{color:var(--primary)}
+.goal-count{background:var(--secondary);color:var(--periwinkle)}
+.invite-button,.modal-primary,.comment-compose button{background:var(--primary)!important;border-color:var(--primary)!important}
+.invite-button:hover,.modal-primary:hover{background:#a92f18!important}
+.view-toggle button.active{background:var(--primary);color:#fff}
+.section-tabs button.active{color:var(--primary);border-color:var(--primary)}
+.group-chips button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.today-nav{border-color:var(--primary)!important;color:var(--primary)!important}
+.month-day.today .month-day-number{background:var(--coral)}
+.day-tile.today .day-name:after{color:var(--primary)}
+.day-tile.selected,.month-day.selected,.feed-calendar-day.selected{background:var(--accent);border-color:var(--coral)}
+.day-tile:hover{border-color:var(--coral)}
+
+/* Group theming reaches further: each crew's color now shows up in the hero and the nav, not just the calendar */
+.group-theme .intro{background:linear-gradient(135deg,color-mix(in srgb,var(--group-color) 85%,#181a2e),color-mix(in srgb,var(--group-color) 55%,#181a2e))}
+.group-theme .bottom-nav button.active{background:var(--group-color)!important;color:#fff!important}
+.group-theme .view-toggle button.active{background:var(--group-color);border-color:var(--group-color)}
+
+/* Motion: tactile and springy, off by request via reduced-motion */
+.progress-card,.feed-card,.month-standing,.crew-person,[data-slot=button],.icon-button,.invite-button,.group-chips button{transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease,background-color .2s ease,border-color .2s ease}
+.progress-card:hover,.feed-card:hover{transform:translateY(-3px)}
+[data-slot=button]:active,.icon-button:active,.invite-button:active{transform:scale(.96)}
+@keyframes kp-pop{0%{transform:scale(1)}45%{transform:scale(1.2)}100%{transform:scale(1)}}
+.goal-row.completed .goal-toggle,.mini-check.checked{animation:kp-pop .38s cubic-bezier(.34,1.56,.64,1)}
+
+/* Soft, tinted shadows instead of flat gray */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.feed-card{box-shadow:0 12px 30px -16px rgba(196,58,31,.18),0 2px 10px rgba(32,35,58,.05)}
+
+@media(prefers-reduced-motion:reduce){
+ .progress-card,.feed-card,.month-standing,.crew-person,[data-slot=button],.icon-button,.invite-button,.group-chips button{transition:none}
+ .progress-card:hover,.feed-card:hover,[data-slot=button]:active,.icon-button:active,.invite-button:active{transform:none}
+ .goal-row.completed .goal-toggle,.mini-check.checked{animation:none}
+}

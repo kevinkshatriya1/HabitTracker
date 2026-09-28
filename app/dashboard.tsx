@@ -139,7 +139,7 @@ export default function Dashboard(){
  const recent=data?.checkins.filter(c=>c.personId!==data.me.id && data.memberships.some(m=>m.circleId===data.circle.id&&m.personId===c.personId)).slice(0,5)||[];
  const groupPeople=data?.people.filter(p=>data.memberships.some(m=>m.circleId===data.circle.id&&m.personId===p.id))||[];
  const groupGoals=data?.goals.filter(g=>g.circleId===data.circle.id&&g.active)||[];
- const groupPalette=["#4566B5","#128390","#805AA8","#B47A2B","#B25F82","#367E6B","#5978A1","#B9664E"];
+ const groupPalette=["#5B6EF5","#12B3A8","#FF6F59","#F5A623","#E85D9E","#3FAE5B","#8B6BE0","#E4572E"];
  const goalName=(kind:string,slot:number)=>data?.goals.find(g=>g.kind===kind&&g.slot===slot)?.title||data?.publicGoals.find(g=>g.kind===kind&&g.slot===slot)?.title||kind;
  const entryGroups=(c:Checkin)=>data?.groups.filter(group=>data.memberships.some(m=>m.circleId===group.id&&m.personId===c.personId) && data.goals.some(g=>g.circleId===group.id&&g.active&&g.kind===c.kind&&g.slot===c.slot&&chosen(c.personId,g.id)))||[];
  const allFeed=Array.from(new Map([...(data?.feed||[]),...feedExtra].map(c=>[c.id,c])).values()).sort((a,b)=>b.updatedAt-a.updatedAt||b.id.localeCompare(a.id));
@@ -157,8 +157,8 @@ export default function Dashboard(){
  };
  const currentDay=new Date(),elapsedWeek=Array.from({length:currentDay.getDay()+1},(_,i)=>shift(weekStart(currentDay),i)),elapsedMonth=Array.from({length:currentDay.getDate()},(_,i)=>new Date(currentDay.getFullYear(),currentDay.getMonth(),i+1));
  const individualStats=(days:Date[])=>days.reduce((sum,day)=>{const x=personProgress(data?.me||{id:"",name:"",email:"",weekdayWake:"",weekendWake:"",weekdayBed:""},day,undefined,progressCheckins);return {done:sum.done+x.done,expected:sum.expected+x.expected}},{done:0,expected:0});
- const progressCircles=[{label:"Today",stats:individualStats([currentDay]),color:"#4566B5"},{label:"This week",stats:individualStats(elapsedWeek),color:"#EF7654"},{label:"This month",stats:individualStats(elapsedMonth),color:"#128390"}];
- const crewColors=["#326e4f","#8eb83e","#8066ac","#d18648","#368c9e","#bf6d83"];
+ const progressCircles=[{label:"Today",stats:individualStats([currentDay]),color:"#4655D6"},{label:"This week",stats:individualStats(elapsedWeek),color:"#C43A1F"},{label:"This month",stats:individualStats(elapsedMonth),color:"#12B3A8"}];
+ const crewColors=["#5B6EF5","#12B3A8","#FF6F59","#F5A623","#E85D9E","#3FAE5B"];
  const groupWeekStats=data?Array.from({length:7},(_,i)=>shift(start,i)).flatMap(day=>groupPeople.map(p=>personProgress(p,day,data.circle.id))).reduce((sum,x)=>({done:sum.done+x.done,expected:sum.expected+x.expected}),{done:0,expected:0}):{done:0,expected:0};
  const groupWeekRate=groupWeekStats.expected?Math.round(groupWeekStats.done/groupWeekStats.expected*100):0;
  const feedCalendarPeople=(feedGroup==="all"?data?.people||[]:filterPeople).filter(p=>feedPerson==="all"||p.id===feedPerson);
