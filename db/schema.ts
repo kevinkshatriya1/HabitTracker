@@ -16,6 +16,7 @@ export const circles = sqliteTable("circles", {
   name: text("name").notNull(),
   inviteCode: text("invite_code").notNull().unique(),
   ownerId: text("owner_id").notNull(),
+  color: text("color").notNull().default("#5B5FC7"),
   createdAt: integer("created_at").notNull(),
 });
 
@@ -33,6 +34,8 @@ export const checkins = sqliteTable("checkins", {
   kind: text("kind").notNull(),
   slot: integer("slot").notNull().default(0),
   value: text("value"),
+  loggedTime: text("logged_time"),
+  details: text("details"),
   photoKey: text("photo_key"),
   photoType: text("photo_type"),
   createdAt: integer("created_at").notNull(),

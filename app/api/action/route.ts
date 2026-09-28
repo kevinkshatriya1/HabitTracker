@@ -4,6 +4,7 @@ import { notifyFriends } from "../../../lib/push";
 import { seedGoals } from "../../../lib/goals";
 
 export const dynamic = "force-dynamic";
+const palette = ["#5B5FC7","#CB5B73","#C27A24","#267F9D","#8159A8","#B45A49","#287B75","#8C6480"];
 const allowed = new Set(["wake","bed","makebed","workout","prep","drinks"]);
 const validDate = (x:unknown):x is string => typeof x==="string" && /^\d{4}-\d{2}-\d{2}$/.test(x) && !Number.isNaN(Date.parse(x+"T12:00:00Z"));
 const validTime = (x:unknown):x is string => typeof x==="string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(x);
@@ -23,19 +24,22 @@ export async function POST(request:Request) {
       await db.prepare("UPDATE people SET name=?,weekday_wake=?,weekend_wake=?,weekday_bed=?,reminder_time=?,reminders=? WHERE id=?").bind(name,weekdayWake,weekendWake,weekdayBed,reminderTime,data.reminders?1:0,user.userId).run();
       return Response.json({ok:true});
     }
-    if (data.action==="rename") {
+    if (data.action==="group_edit") {
       const name=String(data.name || "").trim().slice(0,50);
-      const circleId=String(data.circleId || "");
-      if (!name) return Response.json({error:"Enter a group name."},{status:400});
-      const result=await db.prepare("UPDATE circles SET name=? WHERE id=? AND owner_id=?").bind(name,circleId,user.userId).run();
-      return Response.json({ok:result.meta.changes>0});
+      const color=String(data.color || "");
+      if (!name || !palette.includes(color)) return Response.json({error:"Enter a group name and choose a color."},{status:400});
+      const result=await db.prepare("UPDATE circles SET name=?,color=? WHERE id=? AND owner_id=?").bind(name,color,String(data.circleId||""),user.userId).run();
+      if (!result.meta.changes) return Response.json({error:"Only the group creator can edit this group."},{status:403});
+      return Response.json({ok:true});
     }
     if (data.action==="create_group") {
       const name=String(data.name||"").trim().slice(0,50);
       if(!name)return Response.json({error:"Enter a group name."},{status:400});
       const id=crypto.randomUUID(),code=crypto.randomUUID().slice(0,8).toUpperCase(),now=Date.now();
+      const used=(await db.prepare("SELECT c.color FROM circles c JOIN members m ON m.circle_id=c.id WHERE m.person_id=?").bind(user.userId).all<{color:string}>()).results.map(x=>x.color);
+      const color=palette.find(x=>!used.includes(x))||palette[used.length%palette.length];
       await db.batch([
-        db.prepare("INSERT INTO circles (id,name,invite_code,owner_id,created_at) VALUES (?,?,?,?,?)").bind(id,name,code,user.userId,now),
+        db.prepare("INSERT INTO circles (id,name,invite_code,owner_id,color,created_at) VALUES (?,?,?,?,?,?)").bind(id,name,code,user.userId,color,now),
         db.prepare("INSERT INTO members (circle_id,person_id,joined_at) VALUES (?,?,?)").bind(id,user.userId,now),
       ]);
       await seedGoals(db,id);
@@ -104,12 +108,19 @@ export async function POST(request:Request) {
       }
       return Response.json({ok:true});
     }
+    if (!validTime(data.loggedTime)) return Response.json({error:"Enter the time you completed this goal."},{status:400});
+    let details:string|null=null;
     let value:string|null=null;
     if (kind==="wake" || kind==="bed") {
       if (!validTime(data.value)) return Response.json({error:"Enter the actual time."},{status:400});
       value=data.value;
     } else if (kind==="workout") {
-      value=String(data.value || "Workout").trim().slice(0,60);
+      const type=String(data.workoutType||"");
+      const description=String(data.description||"").trim().slice(0,300);
+      if(!["Lift","Run","Swim","Bike","Golf","Other"].includes(type)||!description)return Response.json({error:"Choose a workout type and describe what you did."},{status:400});
+      const exercises=Array.isArray(data.exercises)?data.exercises.slice(0,20).map((e:unknown)=>{const x=e as Record<string,unknown>;return {name:String(x.name||"").trim().slice(0,70),sets:String(x.sets||"").trim().slice(0,30),weight:String(x.weight||"").trim().slice(0,30)}}).filter((e:{name:string})=>e.name):[];
+      value=type;
+      details=JSON.stringify({description,exercises,additional:String(data.additional||"").trim().slice(0,500)});
     } else if (kind==="drinks") {
       const count=Number(data.value);
       if (!Number.isInteger(count) || count<0 || count>30) return Response.json({error:"Enter a drink count from 0 to 30."},{status:400});
@@ -117,13 +128,13 @@ export async function POST(request:Request) {
     } else if (kind.startsWith("custom:")) {
       value="Done";
     }
-    const now=Date.now();
-    await db.prepare("INSERT INTO checkins (id,person_id,date,kind,slot,value,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(person_id,date,kind,slot) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at").bind(existing?.id || crypto.randomUUID(),user.userId,date,kind,slot,value,now,now).run();
+    const now=Date.now(),entryId=existing?.id || crypto.randomUUID();
+    await db.prepare("INSERT INTO checkins (id,person_id,date,kind,slot,value,logged_time,details,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(person_id,date,kind,slot) DO UPDATE SET value=excluded.value,logged_time=excluded.logged_time,details=excluded.details,updated_at=excluded.updated_at").bind(entryId,user.userId,date,kind,slot,value,data.loggedTime,details,now,now).run();
     if (!existing || (kind==="drinks" && Number(value)>Number(existing.value||0))) {
       const description=kind==="wake"?"logged their wake-up":kind==="bed"?"logged their bedtime":kind==="makebed"?"made their bed":kind==="workout"?"logged "+value:kind==="prep"?"finished Sunday meal prep":kind==="drinks"?"logged a drink":"completed "+permitted.title;
       await notifyFriends(user.userId,date,description,kind,slot);
     }
-    return Response.json({ok:true});
+    return Response.json({ok:true,id:entryId});
   } catch(error) {
     console.error("action failed",error);
     return Response.json({error:"Could not save your change. Try again."},{status:500});
