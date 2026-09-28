@@ -797,43 +797,87 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 }
 
 /* ============================================================
-   Stopwatch redesign — a training-log read instead of a soft
-   SaaS card kit. One track-red spark on cool stone paper (not
-   cream+terracotta), numbers get scoreboard weight in a technical
-   grotesque, checklist rows read as a marked-up logbook, and text
-   fields draw in an ink underline on focus instead of a glow ring.
+   Field log redesign — kills the dark rounded hero card, the
+   white-bento-with-shadow card kit, and the conic-gradient percentage
+   rings; those are the actual AI-dashboard tells, not the color or
+   font alone. One track-red spark on cool stone paper, a condensed
+   headline face reserved for the masthead and stat numerals, flat
+   bordered panels instead of soft elevation, and a ruled checklist
+   that sits on the page instead of inside another box.
    ============================================================ */
-:root{--background:#eeefe9;--foreground:#1b1d22;--card:#fff;--card-foreground:#1b1d22;--primary:#e4461f;--primary-foreground:#fff;--secondary:#e6e8e0;--secondary-foreground:#2e3242;--muted:#e6e8e0;--muted-foreground:#7b8072;--accent:#fdeee7;--accent-foreground:#c23a18;--border:#dfe1d6;--input:#dfe1d6;--ring:#e4461f;--radius:.85rem;--coral:#ff6a45;--periwinkle:#3856c9}
-body{font-family:var(--font-body),Inter,system-ui,sans-serif;letter-spacing:-.005em}
-h1,h2,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.week-score strong{font-family:var(--font-display),"Space Grotesk",sans-serif}
-.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.drinks-count,.month-standing b,.order-number{font-variant-numeric:tabular-nums}
+:root{--background:#eeefe9;--foreground:#1b1d22;--card:#fff;--card-foreground:#1b1d22;--primary:#e4461f;--primary-foreground:#fff;--secondary:#e6e8e0;--secondary-foreground:#2e3242;--muted:#e6e8e0;--muted-foreground:#7b8072;--accent:#fdeee7;--accent-foreground:#c23a18;--border:#d8dacd;--input:#d8dacd;--ring:#e4461f;--radius:.5rem;--coral:#ff6a45;--periwinkle:#3856c9}
+body{font-family:var(--font-body),Manrope,system-ui,sans-serif;letter-spacing:-.005em}
+h1,.brand,.mobile-brand,.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.goal-count,.order-number,.month-standing b,.stat-number{font-family:var(--font-display),Oswald,sans-serif;font-weight:700}
+.day-tile strong,.month-day-number,.progress-ring span,.score-ring span,.profile-stat-ring span,.drinks-count,.month-standing b,.order-number,.stat-number{font-variant-numeric:tabular-nums}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--primary)}
 
-/* Shape: dial back the stadium-pill-everywhere look; panels get a considered radius, pills stay only on things you press */
-.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card{border-radius:14px}
-.day-tile,.month-day,.feed-calendar-day{border-radius:10px}
-.app-dialog{border-radius:18px}
-.photo-thumb,.activity-photo{border-radius:10px}
-.weekly-icon,.push-icon,.invite-symbol{border-radius:10px}
-.goal-toggle,.mini-check{border-radius:5px}
+/* Shape: one small radius everywhere except the things you press */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.day-tile,.month-day,.feed-calendar-day,.app-dialog,.photo-thumb,.activity-photo,.weekly-icon,.push-icon,.invite-symbol{border-radius:6px}
+.goal-toggle,.mini-check{border-radius:4px}
+.calendar-nav button,.view-toggle,.view-toggle button,.group-chips button,.participation-tab,.group-add{border-radius:6px}
 
-/* Hero: a flat scoreboard strip, not another soft floating card */
-.intro{box-shadow:none;border-radius:14px}
-.intro:after{width:190px;height:190px;right:-55px;top:-100px;border-width:2px;border-color:#ffffff17}
-.intro .eyebrow{letter-spacing:0;text-transform:none}
+/* Flat panels instead of soft-shadow elevation; a border does the same job of grouping without the floating-card look */
+.calendar-panel,.daily-panel,.weekly-panel,.crew-panel,.settings-page,.feed-panel,.participation-panel,.progress-card,.feed-card,.friend-panel{box-shadow:none;border:1.5px solid var(--border)}
+.progress-card:hover,.feed-card:hover{transform:none}
 
-/* Labels read in sentence case with a colored tick, not tracked-out caps */
-.side-label,.section-kicker,.eyebrow,.crumb,.goal-schedule h3,.order-section h3,.profile-section-label{letter-spacing:0;text-transform:none;font-size:12px}
-.section-kicker,.month-explain+.section-kicker{display:inline-flex;align-items:center;gap:7px;font-weight:700}
-.section-kicker:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block;flex:none}
-.goal-schedule h3,.order-section h3{font-size:12px;font-weight:700}
+/* Hero: no boxed dark card. The masthead sits flush on the page with one rule under it, like a printed log header. */
+.intro{background:none;color:var(--foreground);border-radius:0;box-shadow:none;padding:0 0 22px;min-height:0;border-bottom:2px solid var(--foreground);overflow:visible}
+.intro:before,.intro:after{display:none}
+.intro h1{font-family:var(--font-display),Oswald,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
+.intro p:last-child{color:var(--muted-foreground)}
+.intro .eyebrow{letter-spacing:0;text-transform:none;color:var(--primary)}
+.week-score{background:none;border:1.5px solid var(--foreground);color:var(--foreground);box-shadow:none;backdrop-filter:none}
+.week-score strong{color:var(--foreground)}
+.week-score small{color:var(--muted-foreground)}
+.group-theme .intro{background:var(--group-color);color:#fff;padding:22px 24px;border-bottom:0}
+.group-theme .intro .eyebrow{color:#fff;opacity:.75}
+.group-theme .intro h1{color:#fff}
+.group-theme .intro p:last-child{color:#ffffffcc}
+.group-theme .week-score{border-color:#ffffff4d;color:#fff}
+.group-theme .week-score strong{color:#fff}
+.group-theme .week-score small{color:#ffffffb3}
+
+/* Numbers are the hero: kill the conic-gradient gauge, keep the number and a plain-language label */
+.progress-ring,.score-ring,.profile-stat-ring{background:none!important;width:auto;height:auto;border-radius:0;display:block}
+.progress-ring>span,.score-ring span,.profile-stat-ring span{background:none;width:auto;height:auto;border-radius:0;display:block;font-size:32px;color:var(--progress-color,var(--primary));line-height:1}
+.score-ring span{color:#fff}
+.group-theme .score-ring span{color:var(--foreground)}
+.progress-card,.week-score{display:flex;align-items:center;gap:14px}
+.profile-stat-ring span i{font-style:normal;font-size:14px;margin-left:2px;opacity:.6}
+
+/* Labels read in sentence case, no tracked caps, no decorative dot */
+.side-label,.section-kicker,.eyebrow,.crumb,.goal-schedule h3,.order-section h3,.profile-section-label{letter-spacing:0;text-transform:none;font-size:12px;font-weight:700}
 .eyebrow{color:var(--primary)}
-.signin{background:radial-gradient(circle at 80% 20%,var(--accent),transparent 32%),var(--background)}
-.signin-card{border-color:var(--border)}
-.primary-link{background:var(--primary)}
+.signin{background:var(--background)}
+.signin-card{border-color:var(--border);box-shadow:none;border-width:1.5px}
+.primary-link{background:var(--primary);border-radius:6px}
 .primary-link:hover{background:#c23a18}
 
-/* Retire the last first-generation greens and icy-blue panels that three earlier
+/* Daily checklist reads as a ruled log page, not a card inside a card */
+.daily-panel{background:none;border:0;padding:0}
+.goal-row{border-top:1.5px solid var(--foreground)}
+.goal-row:last-child{border-bottom:1.5px solid var(--foreground)}
+.panel-footnote{padding-bottom:4px}
+
+/* Profile hero: kill the purple-gradient glow card, same flush treatment as the main hero */
+.profile-hero{background:none;border-radius:0;box-shadow:none;padding:0 0 22px;border-bottom:2px solid var(--foreground)}
+.profile-hero:before,.profile-hero:after{display:none}
+.profile-name{font-family:var(--font-display),Oswald,sans-serif;font-weight:700;color:var(--foreground);letter-spacing:-.01em}
+.profile-email{color:var(--muted-foreground)}
+.profile-avatar-label .avatar{border-color:var(--border);box-shadow:none}
+.profile-avatar-overlay{border-color:var(--background)}
+.profile-badge{background:var(--secondary);color:var(--secondary-foreground);border-color:var(--border)}
+.profile-edit-btn{background:none;border:1.5px solid var(--foreground);color:var(--foreground);border-radius:6px}
+.profile-edit-btn:hover{background:var(--foreground);color:var(--background)}
+.profile-stat-card{border-radius:6px;box-shadow:none;border:1.5px solid var(--border)}
+
+.app-dialog{box-shadow:none;border:1.5px solid var(--foreground)}
+
+/* Bottom nav: drop the glow shadows and heavy floating elevation, keep the pill since it's what you press */
+.bottom-nav{border-radius:16px!important;box-shadow:none!important;border-color:var(--border)!important}
+.bottom-nav button.active{box-shadow:none!important}
+
+/* Retire the last first-generation greens and icy-blue panels that earlier
    redesign passes never reached, so the whole app reads as one palette */
 .participation-tab{color:var(--periwinkle);border-color:var(--border);background:var(--card)}
 .participation-tab:hover{border-color:var(--primary);background:var(--accent)}

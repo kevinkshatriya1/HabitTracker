@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Oswald, Manrope } from "next/font/google";
 import "./globals.css";
 
-const displayFont = Space_Grotesk({
+const displayFont = Oswald({
   subsets: ["latin"],
+  weight: ["500", "700"],
   variable: "--font-display",
   display: "swap",
 });
-const bodyFont = Inter({
+const bodyFont = Manrope({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
