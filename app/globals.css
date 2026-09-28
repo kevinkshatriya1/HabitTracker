@@ -820,10 +820,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 /* Hero: a flat scoreboard strip, not another soft floating card */
 .intro{box-shadow:none;border-radius:14px}
 .intro:after{width:190px;height:190px;right:-55px;top:-100px;border-width:2px;border-color:#ffffff17}
-.intro .eyebrow{letter-spacing:0}
+.intro .eyebrow{letter-spacing:0;text-transform:none}
 
 /* Labels read in sentence case with a colored tick, not tracked-out caps */
-.side-label,.section-kicker,.eyebrow,.crumb,.goal-schedule h3,.order-section h3{letter-spacing:0;text-transform:none}
+.side-label,.section-kicker,.eyebrow,.crumb,.goal-schedule h3,.order-section h3,.profile-section-label{letter-spacing:0;text-transform:none;font-size:12px}
 .section-kicker,.month-explain+.section-kicker{display:inline-flex;align-items:center;gap:7px;font-weight:700}
 .section-kicker:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block;flex:none}
 .goal-schedule h3,.order-section h3{font-size:12px;font-weight:700}

@@ -321,7 +321,7 @@ export default function Dashboard(){
       </div>
 
       <div className="profile-schedule">
-        <h3 className="profile-section-label">YOUR SCHEDULE</h3>
+        <h3 className="profile-section-label">Your schedule</h3>
         <div className="profile-schedule-grid">
           <div className="profile-schedule-item"><span className="psi-icon"><Sunrise size={17}/></span><div><strong>Weekday wake-up</strong><span>{fmtTime(data?.me.weekdayWake||"07:00")}</span></div></div>
           <div className="profile-schedule-item"><span className="psi-icon"><Sunrise size={17}/></span><div><strong>Weekend wake-up</strong><span>{fmtTime(data?.me.weekendWake||"09:00")}</span></div></div>
@@ -331,13 +331,13 @@ export default function Dashboard(){
       </div>
 
       <div className="profile-groups-section">
-        <h3 className="profile-section-label">YOUR CREWS</h3>
+        <h3 className="profile-section-label">Your crews</h3>
         {data?.groups.length?<div className="profile-groups-list">{data.groups.map(g=>{const members=data.memberships.filter(m=>m.circleId===g.id).length;const myGoals=sortGoals(data.goals.filter(x=>x.circleId===g.id&&x.active&&chosen(data.me.id,x.id)));return(<div className="profile-group-card" key={g.id} style={{"--g-color":g.color} as React.CSSProperties}><div className="pgc-top"><span className="pgc-dot"/><strong>{g.name}</strong><small>{members} member{members!==1?"s":""}</small></div><div className="pgc-goals">{myGoals.slice(0,4).map(x=><span key={x.id}>{x.title}</span>)}{myGoals.length>4&&<span>+{myGoals.length-4} more</span>}</div><button className="pgc-invite" onClick={()=>{setGroupId(g.id);setModal("share")}}><Link2 size={13}/> Invite</button></div>)})}</div>:<p className="empty-weekly">No groups yet. Join one with an invite link or create your own.</p>}
         <button className="profile-new-group-btn" onClick={()=>setModal("newgroup")}><Plus size={15}/> New group</button>
       </div>
 
       <div className="profile-privacy-section">
-        <h3 className="profile-section-label">VISIBILITY</h3>
+        <h3 className="profile-section-label">Visibility</h3>
         <p className="profile-privacy-note">Choose who can see each habit in the feed.</p>
         <div className="profile-privacy-list">{privacyGoals.map(g=>{const visibility=data?.privacy.find(x=>x.personId===data?.me.id&&x.kind===g.kind&&x.slot===g.slot)?.visibility||"group";return(<label className="profile-privacy-row" key={g.kind+g.slot}><span>{g.title}</span><select value={visibility} onChange={e=>action({action:"privacy",kind:g.kind,slot:g.slot,visibility:e.target.value})}><option value="private">Only me</option><option value="group">My groups</option><option value="public">Public</option></select></label>)})}</div>
       </div>
@@ -388,7 +388,6 @@ export default function Dashboard(){
 
      </aside>
     </div>}
-    </>}
     <footer className="footer"><span>Keep Pace</span><a href="/signout-with-chatgpt?return_to=%2F">Sign out</a></footer>
    </div>
   </main>
