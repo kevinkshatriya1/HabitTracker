@@ -6,6 +6,9 @@ import { seedGoals, inferGoalMinutes, cadenceOrder } from "../../../lib/goals";
 export const dynamic = "force-dynamic";
 const palette = ["#4566B5","#128390","#805AA8","#B47A2B","#B25F82","#367E6B","#5978A1","#B9664E"];
 const allowed = new Set(["wake","bed","makebed","workout","prep","drinks"]);
+const validWeeklyDay=(x:unknown)=>Number.isInteger(Number(x))&&Number(x)>=0&&Number(x)<=6;
+const allowedIcons=new Set(["sunrise","moon","bed","clock","dumbbell","footprints","bike","waves","heart","target","flame","coffee","utensils","apple","book","brain","music","pencil","droplets","check"]);
+const validIcon=(x:unknown)=>x==null||x===""||allowedIcons.has(String(x));
 const validDate = (x:unknown):x is string => typeof x==="string" && /^\d{4}-\d{2}-\d{2}$/.test(x) && !Number.isNaN(Date.parse(x+"T12:00:00Z"));
 const validTime = (x:unknown):x is string => typeof x==="string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(x);
 
@@ -44,6 +47,33 @@ export async function POST(request:Request) {
       ]);
       await seedGoals(db,id);
       return Response.json({ok:true,groupId:id});
+    }
+    if(data.action==="personal_goal_add"){
+      const title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),time=String(data.preferredTime||""),day=Number(data.weeklyDay??0),iconKey=String(data.iconKey||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||time&&!validTime(time)||!validWeeklyDay(day)||!validIcon(iconKey))return Response.json({error:"Enter a goal, schedule, day and icon."},{status:400});
+      const id=crypto.randomUUID(),kind="custom:"+id.replace(/-/g,"").slice(0,24),minutes=time?Number(time.slice(0,2))*60+Number(time.slice(3)):inferGoalMinutes(title);
+      await db.prepare("INSERT INTO personal_goals (id,person_id,kind,slot,title,cadence,preferred_minutes,weekly_day,active,created_at,icon_key) VALUES (?,?,?,?,?,?,?,?,1,?,?)").bind(id,user.userId,kind,0,title,cadence,minutes,day,Date.now(),iconKey||null).run();
+      return Response.json({ok:true});
+    }
+    if(data.action==="personal_goal_update"){
+      const id=String(data.goalId||""),title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),time=String(data.preferredTime||""),day=Number(data.weeklyDay??0),iconKey=String(data.iconKey||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||!validTime(time)||!validWeeklyDay(day)||!validIcon(iconKey))return Response.json({error:"Enter a goal, schedule, day and icon."},{status:400});
+      const result=await db.prepare("UPDATE personal_goals SET title=?,cadence=?,preferred_minutes=?,weekly_day=?,icon_key=? WHERE id=? AND person_id=?").bind(title,cadence,Number(time.slice(0,2))*60+Number(time.slice(3)),day,iconKey||null,id,user.userId).run();
+      if(!result.meta.changes)return Response.json({error:"Personal goal not found."},{status:404});
+      return Response.json({ok:true});
+    }
+    if(data.action==="personal_goal_delete"){
+      const result=await db.prepare("UPDATE personal_goals SET active=0 WHERE id=? AND person_id=?").bind(String(data.goalId||""),user.userId).run();
+      if(!result.meta.changes)return Response.json({error:"Personal goal not found."},{status:404});
+      return Response.json({ok:true});
+    }
+    if (data.action==="personal_goal_edit") {
+      const goalId=String(data.goalId||""),title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),weeklyDay=Number(data.weeklyDay??0),preferredTime=String(data.preferredTime||""),iconKey=String(data.iconKey||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||!validWeeklyDay(weeklyDay)||preferredTime&&!validTime(preferredTime)||!validIcon(iconKey))return Response.json({error:"Enter a title, repeat schedule, and icon."},{status:400});
+      const goal=await db.prepare("SELECT g.id FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE g.id=? AND m.person_id=?").bind(goalId,user.userId).first();
+      if(!goal)return Response.json({error:"Goal unavailable."},{status:403});
+      await db.prepare("INSERT INTO personal_goal_edits (goal_id,person_id,title,cadence,weekly_day,preferred_minutes,icon_key) VALUES (?,?,?,?,?,?,?) ON CONFLICT(goal_id,person_id) DO UPDATE SET title=excluded.title,cadence=excluded.cadence,weekly_day=excluded.weekly_day,preferred_minutes=excluded.preferred_minutes,icon_key=excluded.icon_key").bind(goalId,user.userId,title,cadence,weeklyDay,preferredTime?Number(preferredTime.slice(0,2))*60+Number(preferredTime.slice(3)):null,iconKey||null).run();
+      return Response.json({ok:true});
     }
     if (data.action==="goal_active") {
       const goalId=String(data.goalId||"");
