@@ -1,11 +1,14 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { notifyFriends } from "../../../lib/push";
-import { seedGoals, inferGoalMinutes, cadenceOrder } from "../../../lib/goals";
+import { inferGoalMinutes, cadenceOrder } from "../../../lib/goals";
 
 export const dynamic = "force-dynamic";
-const palette = ["#4566B5","#128390","#805AA8","#B47A2B","#B25F82","#367E6B","#5978A1","#B9664E"];
+const palette = ["#714B8E","#A63F65","#2B776C","#9A702F","#5B7A3B","#9B517B","#7E584A","#4C6B61"];
 const allowed = new Set(["wake","bed","makebed","workout","prep","drinks"]);
+const validWeeklyDay=(x:unknown)=>Number.isInteger(Number(x))&&Number(x)>=0&&Number(x)<=6;
+const allowedIcons=new Set(["sunrise","moon","bed","clock","dumbbell","footprints","bike","waves","heart","target","flame","coffee","utensils","apple","book","brain","music","pencil","droplets","check"]);
+const validIcon=(x:unknown)=>x==null||x===""||allowedIcons.has(String(x));
 const validDate = (x:unknown):x is string => typeof x==="string" && /^\d{4}-\d{2}-\d{2}$/.test(x) && !Number.isNaN(Date.parse(x+"T12:00:00Z"));
 const validTime = (x:unknown):x is string => typeof x==="string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(x);
 
@@ -17,19 +20,32 @@ export async function POST(request:Request) {
     const db=env.DB;
     if (!db) throw new Error("Database unavailable");
     if (data.action==="settings") {
-      const weekdayWake=data.weekdayWake, weekendWake=data.weekendWake, weekdayBed=data.weekdayBed, reminderTime=data.reminderTime;
-      if (![weekdayWake,weekendWake,weekdayBed,reminderTime].every(validTime)) return Response.json({error:"Enter valid times."},{status:400});
+      const weekdayWake=data.weekdayWake, weekendWake=data.weekendWake, weekdayBed=data.weekdayBed, weekendBed=data.weekendBed, reminderTime=data.reminderTime;
+      if (![weekdayWake,weekendWake,weekdayBed,weekendBed].every(x=>x===""||validTime(x))||!validTime(reminderTime)) return Response.json({error:"Enter valid times."},{status:400});
       const name=String(data.name || "").trim().slice(0,50);
       if (!name) return Response.json({error:"Enter your name."},{status:400});
-      await db.prepare("UPDATE people SET name=?,weekday_wake=?,weekend_wake=?,weekday_bed=?,reminder_time=?,reminders=? WHERE id=?").bind(name,weekdayWake,weekendWake,weekdayBed,reminderTime,data.reminders?1:0,user.userId).run();
+      const phoneNumber=String(data.phoneNumber||"").trim();
+      if(phoneNumber.length>30||phoneNumber&&!/^[+\d() .-]+$/.test(phoneNumber))return Response.json({error:"Enter a valid phone number."},{status:400});
+      await db.prepare("UPDATE people SET name=?,weekday_wake=?,weekend_wake=?,weekday_bed=?,weekend_bed=?,reminder_time=?,reminders=?,phone_number=? WHERE id=?").bind(name,weekdayWake,weekendWake,weekdayBed,weekendBed,reminderTime,data.reminders?1:0,phoneNumber,user.userId).run();
       return Response.json({ok:true});
     }
     if (data.action==="group_edit") {
       const name=String(data.name || "").trim().slice(0,50);
       const color=String(data.color || "");
       if (!name || !palette.includes(color)) return Response.json({error:"Enter a group name and choose a color."},{status:400});
-      const result=await db.prepare("UPDATE circles SET name=?,color=? WHERE id=? AND owner_id=?").bind(name,color,String(data.circleId||""),user.userId).run();
-      if (!result.meta.changes) return Response.json({error:"Only the group creator can edit this group."},{status:403});
+      const result=await db.prepare("UPDATE circles SET name=?,color=? WHERE id=? AND id IN (SELECT circle_id FROM members WHERE person_id=?)").bind(name,color,String(data.circleId||""),user.userId).run();
+      if (!result.meta.changes) return Response.json({error:"Join this group to edit it."},{status:403});
+      return Response.json({ok:true});
+    }
+    if (data.action==="group_update") {
+      const circleId=String(data.circleId||""),name=String(data.name||"").trim().slice(0,50),color=String(data.color||"");
+      if(!name||!palette.includes(color))return Response.json({error:"Enter a group name and choose a color."},{status:400});
+      const member=await db.prepare("SELECT circle_id FROM members WHERE circle_id=? AND person_id=?").bind(circleId,user.userId).first();
+      if(!member)return Response.json({error:"Join this group to edit it."},{status:403});
+      const goals=(await db.prepare("SELECT id FROM group_goals WHERE circle_id=?").bind(circleId).all<{id:string}>()).results;
+      const changes=Array.isArray(data.goals)?data.goals as {id?:unknown;active?:unknown;target?:unknown;rank?:unknown}[]:[];
+      if(changes.length!==goals.length||new Set(changes.map(g=>g.id)).size!==goals.length||changes.some(g=>!goals.some(x=>x.id===g.id)||!Number.isFinite(Number(g.rank))||Number(g.rank)<0||Number(g.rank)>1439||g.target!=null&&(!Number.isInteger(Number(g.target))||Number(g.target)<1||Number(g.target)>30)))return Response.json({error:"Refresh the group and try again."},{status:400});
+      await db.batch([db.prepare("UPDATE circles SET name=?,color=? WHERE id=?").bind(name,color,circleId),...changes.map(g=>db.prepare("UPDATE group_goals SET active=?,target=CASE WHEN kind='drinks' THEN ? ELSE target END,sort_rank=? WHERE id=? AND circle_id=?").bind(g.active?1:0,g.target==null?null:String(g.target),Number(g.rank),String(g.id),circleId))]);
       return Response.json({ok:true});
     }
     if (data.action==="create_group") {
@@ -42,40 +58,92 @@ export async function POST(request:Request) {
         db.prepare("INSERT INTO circles (id,name,invite_code,owner_id,color,created_at) VALUES (?,?,?,?,?,?)").bind(id,name,code,user.userId,color,now),
         db.prepare("INSERT INTO members (circle_id,person_id,joined_at) VALUES (?,?,?)").bind(id,user.userId,now),
       ]);
-      await seedGoals(db,id);
       return Response.json({ok:true,groupId:id});
+    }
+    if (data.action==="delete_group") {
+      const circleId=String(data.circleId||"");
+      const circle=await db.prepare("SELECT id FROM circles WHERE id=? AND owner_id=?").bind(circleId,user.userId).first();
+      if(!circle)return Response.json({error:"Only the group creator can delete this group."},{status:403});
+      await db.batch([db.prepare("DELETE FROM personal_goal_edits WHERE goal_id IN (SELECT id FROM group_goals WHERE circle_id=?)").bind(circleId),db.prepare("DELETE FROM goal_choices WHERE goal_id IN (SELECT id FROM group_goals WHERE circle_id=?)").bind(circleId),db.prepare("DELETE FROM group_goals WHERE circle_id=?").bind(circleId),db.prepare("DELETE FROM members WHERE circle_id=?").bind(circleId),db.prepare("DELETE FROM circles WHERE id=? AND owner_id=?").bind(circleId,user.userId)]);
+      return Response.json({ok:true});
+    }
+    if (data.action==="goal_copy") {
+      const circleId=String(data.circleId||""),sourceId=String(data.sourceGoalId||"");
+      const source=await db.prepare("SELECT g.kind,g.slot,g.title,g.cadence,g.target,g.preferred_minutes AS preferredMinutes,g.weekly_day AS weeklyDay FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE g.id=? AND m.person_id=? AND g.active=1").bind(sourceId,user.userId).first<{kind:string;slot:number;title:string;cadence:string;target:string|null;preferredMinutes:number;weeklyDay:number}>();
+      const target=await db.prepare("SELECT id FROM members WHERE circle_id=? AND person_id=?").bind(circleId,user.userId).first();
+      if(!source||!target)return Response.json({error:"Choose a goal from one of your groups."},{status:403});
+      const existing=await db.prepare("SELECT id FROM group_goals WHERE circle_id=? AND kind=? AND slot=?").bind(circleId,source.kind,source.slot).first();
+      if(existing)return Response.json({error:"This goal is already in the group."},{status:409});
+      const id=crypto.randomUUID();
+      await db.batch([db.prepare("INSERT INTO group_goals (id,circle_id,kind,slot,title,cadence,target,preferred_minutes,weekly_day,active,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").bind(id,circleId,source.kind,source.slot,source.title,source.cadence,source.target,source.preferredMinutes,source.weeklyDay,1,Date.now()),db.prepare("INSERT INTO goal_choices (goal_id,person_id,enabled) SELECT ?,person_id,CASE WHEN person_id=? THEN 1 ELSE 0 END FROM members WHERE circle_id=?").bind(id,user.userId,circleId)]);
+      return Response.json({ok:true});
+    }
+    if(data.action==="personal_goal_add"){
+      const title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),time=String(data.preferredTime||""),day=Number(data.weeklyDay??0),iconKey=String(data.iconKey||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||time&&!validTime(time)||!validWeeklyDay(day)||!validIcon(iconKey))return Response.json({error:"Enter a goal, schedule, day and icon."},{status:400});
+      const id=crypto.randomUUID(),kind="custom:"+id.replace(/-/g,"").slice(0,24),minutes=time?Number(time.slice(0,2))*60+Number(time.slice(3)):inferGoalMinutes(title);
+      await db.prepare("INSERT INTO personal_goals (id,person_id,kind,slot,title,cadence,preferred_minutes,weekly_day,active,created_at,icon_key) VALUES (?,?,?,?,?,?,?,?,1,?,?)").bind(id,user.userId,kind,0,title,cadence,minutes,day,Date.now(),iconKey||null).run();
+      return Response.json({ok:true});
+    }
+    if(data.action==="personal_goal_update"){
+      const id=String(data.goalId||""),title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),time=String(data.preferredTime||""),day=Number(data.weeklyDay??0),iconKey=String(data.iconKey||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||!validTime(time)||!validWeeklyDay(day)||!validIcon(iconKey))return Response.json({error:"Enter a goal, schedule, day and icon."},{status:400});
+      const result=await db.prepare("UPDATE personal_goals SET title=?,cadence=?,preferred_minutes=?,weekly_day=?,icon_key=? WHERE id=? AND person_id=?").bind(title,cadence,Number(time.slice(0,2))*60+Number(time.slice(3)),day,iconKey||null,id,user.userId).run();
+      if(!result.meta.changes)return Response.json({error:"Personal goal not found."},{status:404});
+      return Response.json({ok:true});
+    }
+    if(data.action==="personal_goal_delete"){
+      const result=await db.prepare("DELETE FROM personal_goals WHERE id=? AND person_id=?").bind(String(data.goalId||""),user.userId).run();
+      if(!result.meta.changes)return Response.json({error:"Personal goal not found."},{status:404});
+      return Response.json({ok:true});
+    }
+    if (data.action==="personal_goal_edit") {
+      const goalId=String(data.goalId||""),title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),weeklyDay=Number(data.weeklyDay??0),preferredTime=String(data.preferredTime||""),iconKey=String(data.iconKey||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||!validWeeklyDay(weeklyDay)||preferredTime&&!validTime(preferredTime)||!validIcon(iconKey))return Response.json({error:"Enter a title, repeat schedule, and icon."},{status:400});
+      const goal=await db.prepare("SELECT g.id FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE g.id=? AND m.person_id=?").bind(goalId,user.userId).first();
+      if(!goal)return Response.json({error:"Goal unavailable."},{status:403});
+      await db.prepare("INSERT INTO personal_goal_edits (goal_id,person_id,title,cadence,weekly_day,preferred_minutes,icon_key) VALUES (?,?,?,?,?,?,?) ON CONFLICT(goal_id,person_id) DO UPDATE SET title=excluded.title,cadence=excluded.cadence,weekly_day=excluded.weekly_day,preferred_minutes=excluded.preferred_minutes,icon_key=excluded.icon_key").bind(goalId,user.userId,title,cadence,weeklyDay,preferredTime?Number(preferredTime.slice(0,2))*60+Number(preferredTime.slice(3)):null,iconKey||null).run();
+      return Response.json({ok:true});
+    }
+    if (data.action==="goal_edit") {
+      const goalId=String(data.goalId||""),title=String(data.title||"").trim().slice(0,70),cadence=String(data.cadence||""),weeklyDay=Number(data.weeklyDay??0),preferredTime=String(data.preferredTime||"");
+      if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence)||!validWeeklyDay(weeklyDay)||preferredTime&&!validTime(preferredTime))return Response.json({error:"Enter a title and repeat schedule."},{status:400});
+      const result=await db.prepare("UPDATE group_goals SET title=?,cadence=?,weekly_day=?,preferred_minutes=? WHERE id=? AND circle_id IN (SELECT circle_id FROM members WHERE person_id=?)").bind(title,cadence,weeklyDay,preferredTime?Number(preferredTime.slice(0,2))*60+Number(preferredTime.slice(3)):inferGoalMinutes(title),goalId,user.userId).run();
+      if(!result.meta.changes)return Response.json({error:"Goal not found in your groups."},{status:403});
+      return Response.json({ok:true});
     }
     if (data.action==="goal_active") {
       const goalId=String(data.goalId||"");
       const enabled=data.enabled?1:0;
-      const result=await db.prepare("UPDATE group_goals SET active=? WHERE id=? AND circle_id IN (SELECT id FROM circles WHERE owner_id=?)").bind(enabled,goalId,user.userId).run();
-      if(!result.meta.changes)return Response.json({error:"Only the group creator can edit group goals."},{status:403});
+      const result=await db.prepare("UPDATE group_goals SET active=? WHERE id=? AND circle_id IN (SELECT circle_id FROM members WHERE person_id=?)").bind(enabled,goalId,user.userId).run();
+      if(!result.meta.changes)return Response.json({error:"Join this group to edit its goals."},{status:403});
       return Response.json({ok:true});
     }
     if (data.action==="goal_target") {
       const goalId=String(data.goalId||""),target=Number(data.target);
       if(!Number.isInteger(target)||target<1||target>30)return Response.json({error:"Enter a limit from 1 to 30."},{status:400});
       const result=await db.prepare("UPDATE group_goals SET target=? WHERE id=? AND kind='drinks' AND circle_id IN (SELECT id FROM circles WHERE owner_id=?)").bind(String(target),goalId,user.userId).run();
-      if(!result.meta.changes)return Response.json({error:"Only the group creator can change the drink limit."},{status:403});
+      if(!result.meta.changes)return Response.json({error:"Join this group to edit its drink limit."},{status:403});
       return Response.json({ok:true});
     }
     if (data.action==="goal_add") {
       const circleId=String(data.circleId||"");
-      const circle=await db.prepare("SELECT id FROM circles WHERE id=? AND owner_id=?").bind(circleId,user.userId).first();
-      if(!circle)return Response.json({error:"Only the group creator can add goals."},{status:403});
+      const circle=await db.prepare("SELECT circle_id AS id FROM members WHERE circle_id=? AND person_id=?").bind(circleId,user.userId).first();
+      if(!circle)return Response.json({error:"Join this group to add goals."},{status:403});
       const title=String(data.title||"").trim().slice(0,70);
       const cadence=String(data.cadence||"");
       if(!title||!["daily","weekday","weekend","sunday","weekly"].includes(cadence))return Response.json({error:"Enter a goal and schedule."},{status:400});
       const requestedTime=String(data.preferredTime||"");
       if(requestedTime && !validTime(requestedTime))return Response.json({error:"Enter a valid typical time."},{status:400});
       const preferredMinutes=requestedTime?Number(requestedTime.slice(0,2))*60+Number(requestedTime.slice(3)):inferGoalMinutes(title);
+      const weeklyDay=Number(data.weeklyDay??0);if(!validWeeklyDay(weeklyDay))return Response.json({error:"Choose a valid weekday."},{status:400});
       const id=crypto.randomUUID();
       const normalized=title.toLowerCase().replace(/\s+/g," ").trim()+"|"+cadence;
       const hash=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(normalized));
       const kind="custom:"+Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,24);
       const existingGoal=await db.prepare("SELECT id FROM group_goals WHERE circle_id=? AND kind=?").bind(circleId,kind).first();
       if(existingGoal)return Response.json({error:"This group already has that goal. Turn it on above if it's paused."},{status:409});
-      await db.prepare("INSERT INTO group_goals (id,circle_id,kind,slot,title,cadence,target,preferred_minutes,active,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(id,circleId,kind,0,title,cadence,null,preferredMinutes,1,Date.now()).run();
+      await db.prepare("INSERT INTO group_goals (id,circle_id,kind,slot,title,cadence,target,preferred_minutes,weekly_day,active,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").bind(id,circleId,kind,0,title,cadence,null,preferredMinutes,weeklyDay,1,Date.now()).run();
       await db.prepare("INSERT INTO goal_choices (goal_id,person_id,enabled) SELECT ?,person_id,CASE WHEN person_id=? THEN 1 ELSE 0 END FROM members WHERE circle_id=?").bind(id,user.userId,circleId).run();
       return Response.json({ok:true});
     }
@@ -95,7 +163,7 @@ export async function POST(request:Request) {
     if (data.action==="privacy") {
       const kind=String(data.kind||""),slot=Number(data.slot),visibility=String(data.visibility||"");
       if(!["private","group","public"].includes(visibility)||!Number.isInteger(slot)||slot<0||slot>1)return Response.json({error:"Choose who can see this habit."},{status:400});
-      const goal=await db.prepare("SELECT g.id FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE m.person_id=? AND g.kind=? AND g.slot=? LIMIT 1").bind(user.userId,kind,slot).first();
+      const goal=await db.prepare("SELECT g.id FROM group_goals g JOIN members m ON m.circle_id=g.circle_id WHERE m.person_id=? AND g.kind=? AND g.slot=? UNION SELECT pg.id FROM personal_goals pg WHERE pg.person_id=? AND pg.kind=? AND pg.slot=? LIMIT 1").bind(user.userId,kind,slot,user.userId,kind,slot).first();
       if(!goal)return Response.json({error:"Habit not found."},{status:404});
       await db.prepare("INSERT INTO habit_visibility (person_id,kind,slot,visibility) VALUES (?,?,?,?) ON CONFLICT(person_id,kind,slot) DO UPDATE SET visibility=excluded.visibility").bind(user.userId,kind,slot,visibility).run();
       return Response.json({ok:true});
@@ -114,7 +182,6 @@ export async function POST(request:Request) {
       await db.prepare("INSERT OR IGNORE INTO members (circle_id,person_id,joined_at) VALUES (?,?,?)").bind(circle.id,user.userId,Date.now()).run();
       // Rejoining an existing group also makes it the active group.
       await db.prepare("UPDATE members SET joined_at=? WHERE circle_id=? AND person_id=?").bind(Date.now(),circle.id,user.userId).run();
-      await seedGoals(db,circle.id);
       await db.prepare("INSERT OR IGNORE INTO goal_choices (goal_id,person_id,enabled) SELECT id,?,1 FROM group_goals WHERE circle_id=? AND active=1").bind(user.userId,circle.id).run();
       return Response.json({ok:true});
     }
@@ -122,7 +189,7 @@ export async function POST(request:Request) {
     const kind=String(data.kind), date=data.date;
     const slot=kind==="workout" ? Number(data.slot) : 0;
     if (!Number.isInteger(slot) || slot<0 || slot>1) return Response.json({error:"Invalid workout slot."},{status:400});
-    const permitted=await db.prepare("SELECT g.id,g.title FROM group_goals g JOIN members m ON m.circle_id=g.circle_id LEFT JOIN goal_choices choice ON choice.goal_id=g.id AND choice.person_id=? WHERE m.person_id=? AND g.kind=? AND g.slot=? AND g.active=1 AND COALESCE(choice.enabled,1)=1 LIMIT 1").bind(user.userId,user.userId,kind,slot).first<{id:string;title:string}>();
+    const permitted=await db.prepare("SELECT g.id,g.title FROM group_goals g JOIN members m ON m.circle_id=g.circle_id LEFT JOIN goal_choices choice ON choice.goal_id=g.id AND choice.person_id=? WHERE m.person_id=? AND g.kind=? AND g.slot=? AND g.active=1 AND COALESCE(choice.enabled,1)=1 LIMIT 1").bind(user.userId,user.userId,kind,slot).first<{id:string;title:string}>() || await db.prepare("SELECT id,title FROM personal_goals WHERE person_id=? AND kind=? AND slot=? AND active=1").bind(user.userId,kind,slot).first<{id:string;title:string}>();
     if(!permitted)return Response.json({error:"Choose this goal in one of your groups before logging it."},{status:403});
     const existing=await db.prepare("SELECT id,photo_key AS photoKey,value FROM checkins WHERE person_id=? AND date=? AND kind=? AND slot=?").bind(user.userId,date,kind,slot).first<{id:string;photoKey:string|null;value:string|null}>();
     if (data.remove) {
@@ -132,10 +199,13 @@ export async function POST(request:Request) {
       }
       return Response.json({ok:true});
     }
-    if (!validTime(data.loggedTime)) return Response.json({error:"Enter the time you completed this goal."},{status:400});
+    if (!validTime(data.loggedTime)) return Response.json({error:"Enter the actual time."},{status:400});
+    const status=data.status==="missed"?"missed":"completed";
     let details:string|null=null;
     let value:string|null=null;
-    if (kind==="wake" || kind==="bed") {
+    if (status==="missed") {
+      value="Missed";
+    } else if (kind==="wake" || kind==="bed") {
       if (!validTime(data.value)) return Response.json({error:"Enter the actual time."},{status:400});
       value=data.value;
     } else if (kind==="workout") {
@@ -153,8 +223,8 @@ export async function POST(request:Request) {
       value="Done";
     }
     const now=Date.now(),entryId=existing?.id || crypto.randomUUID();
-    await db.prepare("INSERT INTO checkins (id,person_id,date,kind,slot,value,logged_time,details,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(person_id,date,kind,slot) DO UPDATE SET value=excluded.value,logged_time=excluded.logged_time,details=excluded.details,updated_at=excluded.updated_at").bind(entryId,user.userId,date,kind,slot,value,data.loggedTime,details,now,now).run();
-    if (!existing || (kind==="drinks" && Number(value)>Number(existing.value||0))) {
+    await db.prepare("INSERT INTO checkins (id,person_id,date,kind,slot,value,logged_time,details,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(person_id,date,kind,slot) DO UPDATE SET value=excluded.value,logged_time=excluded.logged_time,details=excluded.details,status=excluded.status,updated_at=excluded.updated_at").bind(entryId,user.userId,date,kind,slot,value,data.loggedTime,details,status,now,now).run();
+    if (status==="completed" && (!existing || (kind==="drinks" && Number(value)>Number(existing.value||0)))) {
       const description=kind==="wake"?"logged their wake-up":kind==="bed"?"logged their bedtime":kind==="makebed"?"made their bed":kind==="workout"?"logged "+value:kind==="prep"?"finished Sunday meal prep":kind==="drinks"?"logged a drink":"completed "+permitted.title;
       await notifyFriends(user.userId,date,description,kind,slot);
     }
