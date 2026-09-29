@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Bell, CalendarDays, Heart, MessageCircle, UserRound, BedDouble, Camera, Check, ChevronDown, ChevronUp, CheckCircle2, ChevronRight, Clock3, Coffee, Dumbbell, Link2, Minus, Plus, Settings2, Share2, Sunrise, Users, Utensils, Wine, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bell, CalendarDays, Heart, MessageCircle, UserRound, BedDouble, Camera, Check, ChevronDown, ChevronUp, CheckCircle2, ChevronRight, Clock3, Coffee, Dumbbell, Link2, Minus, Plus, Settings2, Share2, Sunrise, Users, Utensils, Wine, X, Footprints, Bike, Waves, Target, Flame, Apple, BookOpen, Brain, Music, Pencil, Droplets } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadenceLabel, cadenceOrder, goalApplies, inferGoalMinutes, type GroupGoal } from "@/lib/goals";
 
-type Person={id:string;name:string;email?:string;weekdayWake:string;weekendWake:string;weekdayBed:string;reminderTime?:string;reminders?:number;avatarKey?:string|null};
-type Checkin={id:string;personId:string;date:string;kind:string;slot:number;value:string|null;loggedTime:string|null;details:string|null;photoKey:string|null;createdAt:number;updatedAt:number};
+type Person={id:string;name:string;email?:string;phoneNumber?:string;weekdayWake:string;weekendWake:string;weekdayBed:string;weekendBed?:string;reminderTime?:string;reminders?:number;avatarKey?:string|null};
+type Checkin={id:string;personId:string;date:string;kind:string;slot:number;value:string|null;loggedTime:string|null;details:string|null;status?:string;photoKey:string|null;createdAt:number;updatedAt:number};
 type Group={id:string;name:string;inviteCode:string;ownerId:string;color:string};
 type Choice={goalId:string;personId:string;enabled:number};
-type State={me:Person;circle:Group;groups:Group[];goals:GroupGoal[];choices:Choice[];goalOrders:{kind:string;slot:number;rank:number}[];people:Person[];memberships:{circleId:string;personId:string}[];checkins:Checkin[];feed:Checkin[];privacy:{personId:string;kind:string;slot:number;visibility:string}[];publicGoals:{personId:string;kind:string;slot:number;title:string;cadence:GroupGoal["cadence"];target:string|null;preferredMinutes:number}[]};
+type PersonalGoal=GroupGoal & {personId:string;weeklyDay?:number;iconKey?:string|null;createdAt?:number};
+type State={me:Person;circle:Group;groups:Group[];goals:(GroupGoal & {weeklyDay?:number;iconKey?:string|null;sortRank?:number|null;createdAt?:number})[];personalGoals:PersonalGoal[];friends?:FriendPerson[];notificationPreferences?:{friendId:string;enabled:number}[];choices:Choice[];goalOrders:{kind:string;slot:number;rank:number}[];people:Person[];memberships:{circleId:string;personId:string}[];checkins:Checkin[];feed:Checkin[];privacy:{personId:string;kind:string;slot:number;visibility:string}[];publicGoals:{personId:string;kind:string;slot:number;title:string;cadence:GroupGoal["cadence"];target:string|null;preferredMinutes:number}[]};
 type FriendPerson={id:string;name:string;avatarKey?:string|null};
 type FriendRelation={id:string;requesterId:string;recipientId:string;status:string;personId:string;name:string;avatarKey?:string|null};
 type FeedComment={id:string;checkinId:string;personId:string;body:string;createdAt:number;name:string;avatarKey?:string|null};
@@ -84,7 +85,12 @@ export default function Dashboard(){
  const [customTime,setCustomTime]=useState("");
  const [customCadence,setCustomCadence]=useState<GroupGoal["cadence"]>("daily");
  const [workType,setWorkType]=useState("Lift");
- const [settings,setSettings]=useState({name:"",weekdayWake:"07:00",weekendWake:"09:00",weekdayBed:"23:00",reminderTime:"20:00",reminders:false});
+ const [settings,setSettings]=useState({name:"",phoneNumber:"",weekdayWake:"07:00",weekendWake:"09:00",weekdayBed:"23:00",weekendBed:"",reminderTime:"20:00",reminders:false});
+ const [personalTitle,setPersonalTitle]=useState("");
+ const [personalTime,setPersonalTime]=useState("");
+ const [personalCadence,setPersonalCadence]=useState<GroupGoal["cadence"]>("daily");
+ const [personalWeeklyDay,setPersonalWeeklyDay]=useState(0);
+ const [personalIcon,setPersonalIcon]=useState("check");
  const [inviteInput,setInviteInput]=useState("");
  const fileRef=useRef<HTMLInputElement>(null);
  const [pushEnabled,setPushEnabled]=useState(false);
@@ -102,7 +108,7 @@ export default function Dashboard(){
      fetch("/api/progress?today="+todayKey(),{cache:"no-store"}).then(r=>r.ok?r.json() as Promise<{checkins?:Checkin[]}>:null).then((result:{checkins?:Checkin[]}|null)=>{if(result?.checkins)setProgressCheckins(result.checkins)}).catch(()=>{});
      setData(json);setFeedHasMore(json.feed.length>=100);setError("");
      if(!groupId)setGroupId(json.circle.id);
-     setSettings({name:json.me.name,weekdayWake:json.me.weekdayWake,weekendWake:json.me.weekendWake,weekdayBed:json.me.weekdayBed,reminderTime:json.me.reminderTime||"20:00",reminders:!!json.me.reminders});
+     setSettings({name:json.me.name,phoneNumber:json.me.phoneNumber||"",weekdayWake:json.me.weekdayWake,weekendWake:json.me.weekendWake,weekdayBed:json.me.weekdayBed,weekendBed:json.me.weekendBed||"",reminderTime:json.me.reminderTime||"20:00",reminders:!!json.me.reminders});
    }catch(e){setError(e instanceof Error?e.message:"Could not load your calendar.")}
    finally{setLoading(false)}
  },[view,dateKey(rangeStart),dateKey(rangeEnd),groupId]);
@@ -127,9 +133,10 @@ export default function Dashboard(){
  const chosen=(personId:string,goalId:string)=>((data?.choices.find(c=>c.personId===personId&&c.goalId===goalId)?.enabled)??1)===1;
  const goalRank=(g:GroupGoal)=>data?.goalOrders.find(o=>o.kind===g.kind&&o.slot===g.slot)?.rank??g.preferredMinutes;
  const sortGoals=(goals:GroupGoal[])=>[...goals].sort((a,b)=>cadenceOrder[a.cadence]-cadenceOrder[b.cadence]||goalRank(a)-goalRank(b)||a.preferredMinutes-b.preferredMinutes||a.title.localeCompare(b.title)||a.circleId.localeCompare(b.circleId));
- const scopeGoals=sortGoals((data?.goals||[]).filter(g=>g.active && (section==="me" || g.circleId===data?.circle.id)));
- const dailyGoals=scopeGoals.filter(g=>g.cadence!=="weekly" && goalApplies(g,selectedDate) && chosen(data!.me.id,g.id)).map(g=>displayGoal(g,data!.me,selectedDate));
- const weeklyGoals=scopeGoals.filter(g=>(g.cadence==="weekly"||g.cadence==="sunday")&&chosen(data!.me.id,g.id));
+ const personalAsGoals=(data?.personalGoals||[]).map(g=>({...g,circleId:"personal"}));
+ const scopeGoals=sortGoals([...(data?.goals||[]).filter(g=>g.active && (section==="me" || g.circleId===data?.circle.id)),...(section==="me"?personalAsGoals:[])]);
+ const dailyGoals=scopeGoals.filter(g=>g.cadence!=="weekly" && goalApplies(g,selectedDate) && (g.circleId==="personal"||chosen(data!.me.id,g.id))).map(g=>displayGoal(g,data!.me,selectedDate));
+ const weeklyGoals=scopeGoals.filter(g=>(g.cadence==="weekly"||g.cadence==="sunday")&&(g.circleId==="personal"||chosen(data!.me.id,g.id)));
  const sunday=dateKey(start);
  const weekEntries=myEntries.filter(c=>c.date>=dateKey(start) && c.date<=dateKey(shift(start,6)));
  const drinks=weekEntries.filter(c=>c.kind==="drinks").reduce((n,c)=>n+Number(c.value||0),0);
@@ -256,6 +263,8 @@ export default function Dashboard(){
  async function createGroup(){const ok=await action({action:"create_group",name:newGroupName});if(ok){setGroupId("");setSection("group");setNewGroupName("");setModal("")}}
  async function saveGroup(){if(!data || !groupName.trim())return;const ok=await action({action:"group_edit",circleId:data.circle.id,name:groupName.trim(),color:groupColor});if(ok)setNotice("Group updated")}
  async function addGoal(){const ok=await action({action:"goal_add",circleId:data?.circle.id,title:customTitle,cadence:customCadence,preferredTime:customTime});if(ok){setCustomTitle("");setCustomTime("")}}
+ async function addPersonalGoal(){const ok=await action({action:"personal_goal_add",title:personalTitle,cadence:personalCadence,preferredTime:personalTime,weeklyDay:personalWeeklyDay,iconKey:personalIcon});if(ok){setPersonalTitle("");setPersonalTime("");setPersonalCadence("daily");setPersonalWeeklyDay(0);setPersonalIcon("check")}}
+ async function deletePersonalGoal(goalId:string){await action({action:"personal_goal_delete",goalId})}
  function toggleChoice(goal:GroupGoal){action({action:"goal_choice",goalId:goal.id,enabled:!chosen(data!.me.id,goal.id)})}
  async function moveGoal(goal:GroupGoal,direction:-1|1){
   const unique=sortGoals((data?.goals||[]).filter(g=>g.active&&g.cadence===goal.cadence)).filter((g,i,a)=>a.findIndex(x=>x.kind===g.kind&&x.slot===g.slot)===i);
