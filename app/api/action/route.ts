@@ -20,11 +20,13 @@ export async function POST(request:Request) {
     const db=env.DB;
     if (!db) throw new Error("Database unavailable");
     if (data.action==="settings") {
-      const weekdayWake=data.weekdayWake, weekendWake=data.weekendWake, weekdayBed=data.weekdayBed, reminderTime=data.reminderTime;
-      if (![weekdayWake,weekendWake,weekdayBed,reminderTime].every(validTime)) return Response.json({error:"Enter valid times."},{status:400});
+      const weekdayWake=data.weekdayWake, weekendWake=data.weekendWake, weekdayBed=data.weekdayBed, weekendBed=data.weekendBed, reminderTime=data.reminderTime;
+      if (![weekdayWake,weekendWake,weekdayBed,weekendBed].every(x=>x===""||validTime(x))||!validTime(reminderTime)) return Response.json({error:"Enter valid times."},{status:400});
       const name=String(data.name || "").trim().slice(0,50);
       if (!name) return Response.json({error:"Enter your name."},{status:400});
-      await db.prepare("UPDATE people SET name=?,weekday_wake=?,weekend_wake=?,weekday_bed=?,reminder_time=?,reminders=? WHERE id=?").bind(name,weekdayWake,weekendWake,weekdayBed,reminderTime,data.reminders?1:0,user.userId).run();
+      const phoneNumber=String(data.phoneNumber||"").trim();
+      if(phoneNumber.length>30||phoneNumber&&!/^[+\d() .-]+$/.test(phoneNumber))return Response.json({error:"Enter a valid phone number."},{status:400});
+      await db.prepare("UPDATE people SET name=?,weekday_wake=?,weekend_wake=?,weekday_bed=?,weekend_bed=?,reminder_time=?,reminders=?,phone_number=? WHERE id=?").bind(name,weekdayWake,weekendWake,weekdayBed,weekendBed,reminderTime,data.reminders?1:0,phoneNumber,user.userId).run();
       return Response.json({ok:true});
     }
     if (data.action==="group_edit") {
