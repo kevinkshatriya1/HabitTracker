@@ -297,7 +297,17 @@ export default function Dashboard(){
     {section==="me"&&<div className="progress-trio">{progressCircles.map(({label,stats,color})=>{const rate=stats.expected?Math.round(stats.done/stats.expected*100):0;return <div className="progress-card" key={label} style={{"--progress-color":color} as React.CSSProperties}><div className="progress-ring" style={{background:`conic-gradient(${color} ${rate}%,#edf0ee 0)`}}><span>{rate}%</span></div><div><strong>{label}</strong><small>{stats.done} of {stats.expected} goals</small></div></div>})}</div>}
     {section==="group"&&<div className="group-strip"><div className="group-chips">{data?.groups.map(group=><button key={group.id} className={group.id===data.circle.id?"active":""} onClick={()=>{setGroupId(group.id);setCalendarPerson("all");setCalendarTask("all")}}>{group.name}</button>)}</div><button className="group-add" onClick={()=>setModal("newgroup")}><Plus size={16}/> New group</button><button className="group-add" onClick={()=>setModal("share")}><Link2 size={16}/> Join / invite</button>{data?.circle.ownerId===data?.me.id&&<button className="group-add" onClick={()=>{setGroupName(data!.circle.name);setGroupColor(data!.circle.color);setModal("editgroup")}}><Settings2 size={16}/> Edit group</button>}</div>}
     {section==="me"&&<div className="me-tabs"><button className={meTab==="activity"?"active":""} onClick={()=>setMeTab("activity")}>My Activity</button><button className={meTab==="profile"?"active":""} onClick={()=>setMeTab("profile")}>My Profile</button></div>}
-    {section==="me"&&meTab==="activity"&&<button className="participation-tab" onClick={()=>setModal("participation")}><CheckCircle2 size={16}/><span>Goals you're taking part in</span><small>{data?scopeGoals.filter(g=>chosen(data.me.id,g.id)).length:0} active</small><ChevronRight size={16}/></button>}
+    {section==="me"&&meTab==="activity"&&<section className="your-goals-panel">
+      <div className="your-goals-head"><div><p className="eyebrow">Your goals</p><h2>Build your routine</h2><p>Personal goals and goals you joined through groups live together here.</p></div><button className="participation-tab compact" onClick={()=>setModal("participation")}><Users size={15}/> Group goals</button></div>
+      <div className="personal-goal-list">{data?.personalGoals?.map(g=><div className="personal-goal-row" key={g.id}><div><strong>{g.title}</strong><small>{cadenceLabel[g.cadence]}{g.preferredMinutes!=null?" · "+fmtTime(String(Math.floor(g.preferredMinutes/60)).padStart(2,"0")+":"+String(g.preferredMinutes%60).padStart(2,"0")):""}</small></div><button aria-label={"Delete "+g.title} onClick={()=>deletePersonalGoal(g.id)}><X size={15}/></button></div>)}</div>
+      <div className="personal-goal-create">
+        <Input value={personalTitle} onChange={e=>setPersonalTitle(e.target.value)} placeholder="Add a personal goal"/>
+        <Select value={personalCadence} onValueChange={v=>setPersonalCadence(v as GroupGoal["cadence"])}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{Object.entries(cadenceLabel).map(([value,label])=><SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
+        {personalCadence==="weekly"&&<Select value={String(personalWeeklyDay)} onValueChange={v=>setPersonalWeeklyDay(Number(v))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((label,i)=><SelectItem key={label} value={String(i)}>{label}</SelectItem>)}</SelectContent></Select>}
+        <Input type="time" value={personalTime} onChange={e=>setPersonalTime(e.target.value)}/>
+        <Button disabled={!personalTitle.trim()||!!saving} onClick={addPersonalGoal}><Plus size={15}/> Add goal</Button>
+      </div>
+    </section>}
     {section==="me"&&meTab==="profile"&&<section className="profile-page">
       <div className="profile-hero">
         <div className="profile-avatar-wrap">
@@ -334,7 +344,7 @@ export default function Dashboard(){
         <div className="profile-schedule-grid">
           <div className="profile-schedule-item"><span className="psi-icon"><Sunrise size={17}/></span><div><strong>Weekday wake-up</strong><span>{fmtTime(data?.me.weekdayWake||"07:00")}</span></div></div>
           <div className="profile-schedule-item"><span className="psi-icon"><Sunrise size={17}/></span><div><strong>Weekend wake-up</strong><span>{fmtTime(data?.me.weekendWake||"09:00")}</span></div></div>
-          <div className="profile-schedule-item"><span className="psi-icon"><Clock3 size={17}/></span><div><strong>Bedtime</strong><span>{fmtTime(data?.me.weekdayBed||"23:00")}</span></div></div>
+          <div className="profile-schedule-item"><span className="psi-icon"><Clock3 size={17}/></span><div><strong>Weekday bedtime</strong><span>{fmtTime(data?.me.weekdayBed||"23:00")}</span></div></div><div className="profile-schedule-item"><span className="psi-icon"><Clock3 size={17}/></span><div><strong>Weekend bedtime</strong><span>{data?.me.weekendBed?fmtTime(data.me.weekendBed):"Not set"}</span></div></div>
           <div className="profile-schedule-item"><span className="psi-icon"><Bell size={17}/></span><div><strong>Daily reminder</strong><span>{data?.me.reminderTime?fmtTime(data.me.reminderTime):"Off"}</span></div></div>
         </div>
       </div>
