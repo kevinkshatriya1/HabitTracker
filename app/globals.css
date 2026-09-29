@@ -932,3 +932,5 @@ input:focus,textarea:focus,[data-slot=input]:focus-within,[data-slot=select-trig
 .personal-goal-create{display:grid;grid-template-columns:minmax(180px,2fr) minmax(140px,1fr) minmax(120px,1fr) auto;gap:8px;align-items:center}.personal-goal-create button{white-space:nowrap}
 .participation-tab.compact{width:auto;margin:0}
 @media(max-width:720px){.your-goals-head{display:grid}.personal-goal-create{grid-template-columns:1fr}.participation-tab.compact{width:100%}}
+
+.log-status-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}.log-status-toggle button{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted-foreground);font-weight:700;cursor:pointer}.log-status-toggle button.active{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,var(--card));color:var(--foreground)}.log-status-toggle button.active.missed{border-color:var(--destructive,#b4473f);background:color-mix(in srgb,var(--destructive,#b4473f) 8%,var(--card))}
