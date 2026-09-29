@@ -39,7 +39,7 @@ jobs:
             cfg.compatibility_flags = ["nodejs_compat"];
             if (Array.isArray(cfg.d1_databases)) {
               cfg.d1_databases = cfg.d1_databases.map(db =>
-                db.binding === "DB" ? { ...db, migrations_dir: "drizzle" } : db
+                db.binding === "DB" ? { ...db, migrations_dir: "../../drizzle" } : db
               );
             }
             fs.writeFileSync(path, JSON.stringify(cfg));
