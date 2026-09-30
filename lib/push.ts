@@ -32,7 +32,7 @@ export async function notifyFriends(actorId:string, date:string, message:string,
        OR (?='public' AND EXISTS (SELECT 1 FROM friendships f WHERE f.status='accepted' AND ((f.requester_id=? AND f.recipient_id=s.person_id) OR (f.recipient_id=? AND f.requester_id=s.person_id))))
       ) LIMIT 100`).bind(actorId,kind,slot,actorId,actorId,privacy?.visibility||"group",actorId,actorId).all<SubscriptionRow>();
     const privateJWK=JSON.parse(env.VAPID_PRIVATE_JWK) as JsonWebKey;
-    const title="Keep Pace · "+(actor?.name||"A friend");
+    const title="Endeavor · "+(actor?.name||"A friend");
     await Promise.allSettled(subscriptions.results.map(async s=>{
       if (!trustedPushEndpoint(s.endpoint)) return;
       try {
