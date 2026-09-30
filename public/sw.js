@@ -1,7 +1,7 @@
 self.addEventListener("push",event=>{
-  let data={title:"Keep Pace",body:"A friend checked in.",url:"/"};
+  let data={title:"Endeavor",body:"A friend checked in.",url:"/"};
   try {if(event.data)data={...data,...event.data.json()}} catch {}
-  event.waitUntil(self.registration.showNotification(data.title,{body:data.body,icon:"/icon-192.png",badge:"/icon-192.png",data:{url:data.url||"/"},tag:"keep-pace-"+Date.now()}));
+  event.waitUntil(self.registration.showNotification(data.title,{body:data.body,icon:"/icon-192.png",badge:"/icon-192.png",data:{url:data.url||"/"},tag:"endeavor-"+Date.now()}));
 });
 self.addEventListener("notificationclick",event=>{
   event.notification.close();
