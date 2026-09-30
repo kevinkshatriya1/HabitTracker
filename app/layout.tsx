@@ -9,7 +9,7 @@ const bodyFont = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Keep Pace — Your accountability calendar",
+  title: "Endeavor — Your accountability calendar",
   description: "Show up together. Track daily goals, share photo check-ins, and keep your crew accountable.",
   icons: {
     icon: "/favicon.svg",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     apple: "/icon-192.png",
   },
   manifest: "/manifest.webmanifest",
-  appleWebApp: {capable:true,title:"Keep Pace",statusBarStyle:"default"},
+  appleWebApp: {capable:true,title:"Endeavor",statusBarStyle:"default"},
 };
 
 export default function RootLayout({

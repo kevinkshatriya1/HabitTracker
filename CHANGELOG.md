@@ -1,4 +1,4 @@
-# Keep Pace changelog
+# Endeavor changelog
 
 ## 2026-09-28 15:01 EDT — Anti-slop redesign: kinetic typography & spring animations
 - Replace Inter/Avenir with Outfit font (300–900 weights) throughout.
@@ -10,6 +10,10 @@
 - Feed cards: 20px radius, staggered entry, spring hover lift.
 - Bottom nav: coral glow box-shadow on active item; pill tabs scale(1.02) on active state.
 - Group cards: translateX slide-right on hover with color-matched glow shadow.
+
+## 2026-09-29 20:38 EDT — Rename app to Endeavor
+- Rename the user-facing app brand from Keep Pace to Endeavor across page metadata, PWA install metadata, sign-in branding, and push notifications.
+- Update the PWA notification tag namespace and project documentation to the Endeavor name while preserving existing data, hosting, and deployment configuration.
 
 Times use America/New_York. The Git commits preserve the source for each release.
 
